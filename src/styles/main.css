@@ -310,6 +310,12 @@ button.is-revealed {
   line-height: 1.1;
 }
 
+.score-card .need {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ink-muted);
+}
+
 .score-card.A .count {
   color: var(--team-a);
 }
@@ -663,6 +669,47 @@ button.call-B {
 .sit-table td:nth-child(n + 2) {
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+}
+
+.rules-panel {
+  margin-bottom: 0;
+}
+
+.runs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.run-card {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-solid);
+}
+
+.run-card.is-active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(31, 75, 94, 0.15);
+}
+
+.run-card-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+  flex: 1 1 16rem;
+}
+
+.run-card-actions {
+  display: flex;
+  gap: 0.5rem;
 }
 
 footer.site-foot {

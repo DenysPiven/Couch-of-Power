@@ -1,53 +1,60 @@
+import {
+  DEFAULT_RULES,
+  couchSeats,
+  namesForCount,
+  normalizeRules,
+} from './rules.js';
+
 /** @typedef {'A' | 'B'} Team */
 
 /** @typedef {{ id: number, name: string, team: Team }} Player */
 
 /**
  * @typedef {object} GameState
- * @property {(number|null)[]} seats - player id or null (empty) per seat 0..8
- * @property {number[]} papers - papers[playerId] = name owner id (whose name is on the paper)
+ * @property {import('./rules.js').GameRules} rules
+ * @property {(number|null)[]} seats - player id or null (empty)
+ * @property {number[]} papers - papers[playerId] = name owner id
  * @property {Player[]} players
- * @property {number|null} lastCalled - last called name owner id
- * @property {boolean} noRepeat - official rule: no same name twice in a row
- * @property {boolean} noOwnPaper - official rule: cannot call name on own paper
+ * @property {number|null} lastCalled
+ * @property {boolean} noRepeat
+ * @property {boolean} noOwnPaper
  * @property {number} moveCount
  * @property {Team|null} winner
  */
 
-export const SEAT_COUNT = 9;
-export const COUCH = Object.freeze([0, 1, 2, 3]);
-export const EMPTY_START = 4;
+/** @deprecated use DEFAULT_RULES / state.rules */
+export const SEAT_COUNT = DEFAULT_RULES.seatCount;
+/** @deprecated use couchSeats(state.rules) */
+export const COUCH = Object.freeze(couchSeats(DEFAULT_RULES));
+/** @deprecated use state.rules.emptyStart */
+export const EMPTY_START = DEFAULT_RULES.emptyStart;
 
-const DEFAULT_NAMES = [
-  'Alex',
-  'Blake',
-  'Casey',
-  'Drew',
-  'Eden',
-  'Frankie',
-  'Gray',
-  'Harper',
-];
+export const DEFAULT_NAMES = namesForCount(DEFAULT_RULES.players);
 
 /**
- * @param {Partial<{ names: string[], seed: number, noRepeat: boolean, noOwnPaper: boolean, papers: number[] }>} [opts]
+ * @param {Partial<{
+ *   names: string[],
+ *   seed: number,
+ *   noRepeat: boolean,
+ *   noOwnPaper: boolean,
+ *   papers: number[],
+ *   rules: Partial<import('./rules.js').GameRules> | import('./rules.js').GameRules
+ * }>} [opts]
  * @returns {GameState}
  */
 export function createInitialState(opts = {}) {
-  const names = opts.names ?? DEFAULT_NAMES;
-  if (names.length !== 8) throw new Error('Exactly 8 names required');
+  const rules = normalizeRules(opts.rules ?? DEFAULT_RULES);
+  const names = opts.names ?? namesForCount(rules.players);
+  if (names.length !== rules.players) {
+    throw new Error(`Exactly ${rules.players} names required`);
+  }
 
-  const players = names.map((name, id) => ({
-    id,
-    name,
-    team: /** @type {Team} */ (id % 2 === 0 ? 'A' : 'B'),
-  }));
-
+  const players = buildPlayers(names, rules);
   /** @type {(number|null)[]} */
-  const seats = Array(SEAT_COUNT).fill(null);
+  const seats = Array(rules.seatCount).fill(null);
   let personIdx = 0;
-  for (let s = 0; s < SEAT_COUNT; s++) {
-    if (s === EMPTY_START) continue;
+  for (let s = 0; s < rules.seatCount; s++) {
+    if (s === rules.emptyStart) continue;
     seats[s] = personIdx++;
   }
 
@@ -58,7 +65,9 @@ export function createInitialState(opts = {}) {
         opts.seed,
       );
 
-  return {
+  /** @type {GameState} */
+  const state = {
+    rules,
     seats,
     papers,
     players,
@@ -68,17 +77,41 @@ export function createInitialState(opts = {}) {
     moveCount: 0,
     winner: null,
   };
+  state.winner = checkWinner(state);
+  return state;
 }
 
 /**
- * Caller = the person who has the empty seat on their right.
- * Seats increase clockwise. Facing the center, "right" follows the counterclockwise
- * tangent, so empty is at caller−1 and the caller sits at empty+1.
+ * @param {string[]} names
+ * @param {import('./rules.js').GameRules} rules
+ */
+function buildPlayers(names, rules) {
+  /** @type {Team[]} */
+  const roster = [];
+  let aLeft = rules.teamA;
+  let bLeft = rules.teamB;
+  while (aLeft + bLeft > 0) {
+    if (aLeft > 0) {
+      roster.push('A');
+      aLeft--;
+    }
+    if (bLeft > 0) {
+      roster.push('B');
+      bLeft--;
+    }
+  }
+  return names.map((name, id) => ({ id, name, team: roster[id] }));
+}
+
+/**
+ * Caller = person with empty seat on their right.
+ * Seats increase clockwise; facing center, right is counterclockwise → caller = empty+1.
+ * @param {(number|null)[]} seats
  */
 export function callerSeat(seats) {
   const empty = seats.indexOf(null);
   if (empty < 0) throw new Error('No empty seat');
-  return (empty + 1) % SEAT_COUNT;
+  return (empty + 1) % seats.length;
 }
 
 export function emptySeat(seats) {
@@ -96,7 +129,7 @@ export function callerId(state) {
 export function couchCounts(state) {
   let a = 0;
   let b = 0;
-  for (const seat of COUCH) {
+  for (const seat of couchSeats(state.rules)) {
     const id = state.seats[seat];
     if (id == null) continue;
     if (state.players[id].team === 'A') a++;
@@ -108,13 +141,12 @@ export function couchCounts(state) {
 /** @param {GameState} state */
 export function checkWinner(state) {
   const c = couchCounts(state);
-  if (c.A === 4) return 'A';
-  if (c.B === 4) return 'B';
+  if (c.A === state.rules.teamA) return 'A';
+  if (c.B === state.rules.teamB) return 'B';
   return null;
 }
 
 /**
- * Legal name-owner ids the current caller may call.
  * @param {GameState} state
  * @returns {number[]}
  */
@@ -131,7 +163,6 @@ export function legalCalls(state) {
 }
 
 /**
- * Apply a call: person holding that name's paper moves to empty; swap papers with caller.
  * @param {GameState} state
  * @param {number} nameOwnerId
  * @returns {GameState}
@@ -145,9 +176,10 @@ export function applyCall(state, nameOwnerId) {
 
   const caller = callerId(state);
   const empty = emptySeat(state.seats);
+  const seatCount = state.seats.length;
 
   let moverSeat = -1;
-  for (let s = 0; s < SEAT_COUNT; s++) {
+  for (let s = 0; s < seatCount; s++) {
     const pid = state.seats[s];
     if (pid != null && state.papers[pid] === nameOwnerId) {
       moverSeat = s;
@@ -187,7 +219,6 @@ export function teamOfCaller(state) {
 }
 
 /**
- * Who sits where after call, without mutating — for UI previews.
  * @param {GameState} state
  * @param {number} nameOwnerId
  */
@@ -195,7 +226,6 @@ export function previewCall(state, nameOwnerId) {
   return applyCall(state, nameOwnerId);
 }
 
-/** Mulberry32 */
 function rng(seed) {
   let t = seed >>> 0;
   return () => {
@@ -229,4 +259,4 @@ export function nameOnPaper(state, playerId) {
   return state.players[state.papers[playerId]].name;
 }
 
-export { DEFAULT_NAMES };
+export { DEFAULT_RULES, normalizeRules, namesForCount, couchSeats };

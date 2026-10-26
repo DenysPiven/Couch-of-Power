@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Stats — Four on the Couch</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Figtree:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/src/styles/main.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <h1 class="brand">Four on the <span>Couch</span></h1>
+      <nav class="nav" aria-label="Navigation">
+        <a href="./index.html">Game</a>
+        <a href="./sim.html">Simulations</a>
+        <a href="./stats.html" aria-current="page">Stats</a>
+      </nav>
+    </header>
+
+    <main>
+      <p class="lead">
+        Saved simulation runs from this browser. Open a run to see win rates by
+        situation. Clear or delete entries anytime.
+      </p>
+
+      <section class="panel">
+        <div class="toolbar" style="justify-content: space-between">
+          <h2 class="panel-title" style="margin: 0">Saved runs</h2>
+          <button type="button" id="btn-clear-runs">Clear all</button>
+        </div>
+        <p class="hint" id="runs-empty">No saved runs yet. Finish a batch on Simulations.</p>
+        <div class="runs-list" id="runs-list"></div>
+      </section>
+
+      <section class="panel" style="margin-top: 1.25rem" id="run-detail" hidden>
+        <h2 class="panel-title" id="detail-title">Run detail</h2>
+        <p class="hint" id="detail-summary"></p>
+        <div class="stats-grid" id="detail-stats"></div>
+        <div class="bar-chart" style="margin-top: 1rem">
+          <div class="bar-row">
+            <span>Team A</span>
+            <div class="bar-track"><div class="bar-fill A" id="detail-bar-a"></div></div>
+            <span id="detail-pct-a">0%</span>
+          </div>
+          <div class="bar-row">
+            <span>Team B</span>
+            <div class="bar-track"><div class="bar-fill B" id="detail-bar-b"></div></div>
+            <span id="detail-pct-b">0%</span>
+          </div>
+          <div class="bar-row">
+            <span>Draw / limit</span>
+            <div class="bar-track"><div class="bar-fill draw" id="detail-bar-draw"></div></div>
+            <span id="detail-pct-draw">0%</span>
+          </div>
+        </div>
+        <h3 class="panel-title" style="font-size: 1.05rem; margin-top: 1.25rem">By situation</h3>
+        <div class="table-wrap">
+          <table class="sit-table">
+            <thead>
+              <tr>
+                <th>Situation</th>
+                <th>Layouts</th>
+                <th>Games</th>
+                <th>A%</th>
+                <th>B%</th>
+                <th>Draw%</th>
+                <th>Avg moves</th>
+              </tr>
+            </thead>
+            <tbody id="detail-sit-body"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-foot">Stored locally in your browser (localStorage).</footer>
+    <script type="module" src="/src/stats-main.js"></script>
+  </body>
+</html>

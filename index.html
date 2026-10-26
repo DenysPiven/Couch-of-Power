@@ -19,17 +19,19 @@
       <nav class="nav" aria-label="Navigation">
         <a href="./index.html" aria-current="page">Game</a>
         <a href="./sim.html">Simulations</a>
+        <a href="./stats.html">Stats</a>
       </nav>
     </header>
 
     <main>
-      <p class="lead">
-        8 players, 9 seats in a circle. Whoever has the empty seat on their right
-        calls a name. Whoever holds that paper sits in the empty seat and swaps
-        papers with the caller. Team goal: all four on the couch.
+      <p class="lead" id="game-lead">
+        Configurable party game. Whoever has the empty seat on their right calls a
+        name; papers swap; fill the couch with your whole team.
       </p>
 
-      <div class="layout-game">
+      <div id="rules-mount"></div>
+
+      <div class="layout-game" style="margin-top: 1.25rem">
         <section class="panel board-wrap" aria-label="Board">
           <div class="board" id="board">
             <div class="couch-arc" aria-hidden="true"></div>
@@ -40,12 +42,16 @@
           <div class="scores" aria-live="polite">
             <div class="score-card A">
               <h2>Team A</h2>
-              <div class="count" id="score-a">2</div>
+              <div class="count">
+                <span id="score-a">0</span><span class="need" id="score-a-need"> / 4</span>
+              </div>
               <div>on the couch</div>
             </div>
             <div class="score-card B">
               <h2>Team B</h2>
-              <div class="count" id="score-b">2</div>
+              <div class="count">
+                <span id="score-b">0</span><span class="need" id="score-b-need"> / 4</span>
+              </div>
               <div>on the couch</div>
             </div>
           </div>
@@ -81,30 +87,26 @@
           </div>
 
           <div class="panel">
-            <h2 style="font-family: var(--font-display); font-size: 1.05rem; margin: 0 0 0.5rem">
-              Known papers
-            </h2>
+            <h2 class="panel-title" style="font-size: 1.05rem">Known papers</h2>
             <p class="hint" id="known-list">None yet — call a name to reveal a paper.</p>
           </div>
 
           <div class="panel">
-            <h2 style="font-family: var(--font-display); font-size: 1.05rem; margin: 0 0 0.5rem">
-              Log
-            </h2>
+            <h2 class="panel-title" style="font-size: 1.05rem">Log</h2>
             <ol class="log" id="log"></ol>
           </div>
 
           <details class="panel">
             <summary style="font-weight: 700; cursor: pointer">Player names</summary>
             <div class="setup-row" id="names-form" style="margin-top: 0.75rem"></div>
-            <p class="hint">Changes apply after “New game”.</p>
+            <p class="hint">Changes apply after “New game” or Apply setup.</p>
           </details>
         </aside>
       </div>
     </main>
 
     <footer class="site-foot">
-      The couch is seats 1–4 at the top of the circle. Empty seat at start is the middle chair.
+      Couch seats are at the top of the circle (seat 1 onward). Setup is stored in this browser.
     </footer>
 
     <script type="module" src="/src/main.js"></script>

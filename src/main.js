@@ -1,16 +1,17 @@
 import {
   applyCall,
   couchCounts,
+  couchSeats,
   createInitialState,
   callerId,
   callerSeat,
-  COUCH,
-  DEFAULT_NAMES,
   emptySeat,
   legalCalls,
   nameOnPaper,
-  SEAT_COUNT,
+  namesForCount,
 } from './game/engine.js';
+import { loadRules } from './storage.js';
+import { bindRulesForm, rulesPanelHtml } from './ui/rules-form.js';
 
 const boardEl = document.getElementById('board');
 const callGrid = document.getElementById('call-grid');
@@ -18,27 +19,45 @@ const logEl = document.getElementById('log');
 const winBanner = document.getElementById('win-banner');
 const namesForm = document.getElementById('names-form');
 const knownListEl = document.getElementById('known-list');
+const leadEl = document.getElementById('game-lead');
 
+document.getElementById('rules-mount').innerHTML = rulesPanelHtml();
+
+let rules = loadRules();
 let state = null;
 /** @type {{ state: import('./game/engine.js').GameState, knownPapers: Map<number, number>, calledNames: Set<number> }[]} */
 let history = [];
 let showPapers = false;
-/** playerId -> nameOwnerId we currently know they hold */
 let knownPapers = new Map();
-/** nameOwnerIds that have been called at least once this game */
 let calledNames = new Set();
+
+const rulesForm = bindRulesForm({
+  onApply: (next) => {
+    rules = next;
+    buildNamesForm();
+    newGame();
+    updateLead();
+  },
+});
+
+function updateLead() {
+  if (!leadEl) return;
+  leadEl.textContent = `${rules.players} players, ${rules.seatCount} seats. Whoever has the empty seat on their right calls a name. Whoever holds that paper sits in the empty seat and swaps papers with the caller. Win: get all ${rules.teamA} of team A or all ${rules.teamB} of team B on the couch (${rules.couchSize} seats).`;
+}
 
 function readNames() {
   const inputs = namesForm.querySelectorAll('input[data-name-idx]');
-  if (!inputs.length) return [...DEFAULT_NAMES];
-  return [...inputs].map((el, i) => el.value.trim() || DEFAULT_NAMES[i]);
+  const defaults = namesForCount(rules.players);
+  if (!inputs.length) return defaults;
+  return [...inputs].map((el, i) => el.value.trim() || defaults[i] || `Player ${i + 1}`);
 }
 
 function buildNamesForm() {
   namesForm.innerHTML = '';
-  DEFAULT_NAMES.forEach((name, i) => {
+  const defaults = namesForCount(rules.players);
+  defaults.forEach((name, i) => {
     const label = document.createElement('label');
-    label.textContent = `Player ${i + 1} (${i % 2 === 0 ? 'A' : 'B'})`;
+    label.textContent = `Player ${i + 1}`;
     const input = document.createElement('input');
     input.value = name;
     input.dataset.nameIdx = String(i);
@@ -49,9 +68,12 @@ function buildNamesForm() {
 }
 
 function newGame() {
-  const names = readNames();
+  rules = rulesForm.getRules();
+  const names = readNames().slice(0, rules.players);
+  while (names.length < rules.players) names.push(`Player ${names.length + 1}`);
   state = createInitialState({
     names,
+    rules,
     noOwnPaper: document.getElementById('rule-own').checked,
     noRepeat: document.getElementById('rule-repeat').checked,
   });
@@ -59,12 +81,16 @@ function newGame() {
   knownPapers = new Map();
   calledNames = new Set();
   logEl.innerHTML = '';
+  resetSeatElements();
   render();
 }
 
-function seatPosition(index) {
-  // Seat 0 at top; clockwise. Couch = 0..3 near the top.
-  const angle = (-90 + index * (360 / SEAT_COUNT)) * (Math.PI / 180);
+function resetSeatElements() {
+  for (const el of boardEl.querySelectorAll('.seat')) el.remove();
+}
+
+function seatPosition(index, seatCount) {
+  const angle = (-90 + index * (360 / seatCount)) * (Math.PI / 180);
   const radius = 36;
   const x = 50 + radius * Math.cos(angle);
   const y = 50 + radius * Math.sin(angle);
@@ -72,9 +98,11 @@ function seatPosition(index) {
 }
 
 function ensureSeats() {
-  if (boardEl.querySelectorAll('.seat').length === SEAT_COUNT) return;
-  for (let i = 0; i < SEAT_COUNT; i++) {
-    const { x, y } = seatPosition(i);
+  const seatCount = state.rules.seatCount;
+  if (boardEl.querySelectorAll('.seat').length === seatCount) return;
+  resetSeatElements();
+  for (let i = 0; i < seatCount; i++) {
+    const { x, y } = seatPosition(i, seatCount);
     const el = document.createElement('div');
     el.className = 'seat';
     el.dataset.seat = String(i);
@@ -91,8 +119,6 @@ function paperIsKnown(playerId) {
 }
 
 /**
- * After calling `nameOwnerId`, everyone sees who held that paper; the caller
- * receives it. The mover gets the caller's old paper only if that was known.
  * @param {import('./game/engine.js').GameState} before
  * @param {number} nameOwnerId
  * @param {Map<number, number>} prevKnown
@@ -100,27 +126,21 @@ function paperIsKnown(playerId) {
 function knowledgeAfterCall(before, nameOwnerId, prevKnown) {
   const caller = callerId(before);
   let mover = -1;
-  for (let s = 0; s < SEAT_COUNT; s++) {
+  for (let s = 0; s < before.seats.length; s++) {
     const pid = before.seats[s];
     if (pid != null && before.papers[pid] === nameOwnerId) {
       mover = pid;
       break;
     }
   }
-
   const next = new Map(prevKnown);
   const callerOldPaper = before.papers[caller];
-
-  // Public: caller now holds the called name.
   next.set(caller, nameOwnerId);
-
-  // Mover receives caller's previous paper — known only if we already knew it.
   if (prevKnown.has(caller) && prevKnown.get(caller) === callerOldPaper) {
     next.set(mover, callerOldPaper);
   } else {
     next.delete(mover);
   }
-
   return next;
 }
 
@@ -129,22 +149,21 @@ function renderKnownList() {
   const entries = [];
   for (const [playerId, nameOwnerId] of knownPapers) {
     if (state.papers[playerId] !== nameOwnerId) continue;
-    const holder = state.players[playerId];
-    const paper = state.players[nameOwnerId];
-    entries.push(`${holder.name} holds “${paper.name}”`);
+    entries.push(`${state.players[playerId].name} holds “${state.players[nameOwnerId].name}”`);
   }
-  if (!entries.length) {
-    knownListEl.textContent = 'None yet — call a name to reveal a paper.';
-    return;
-  }
-  knownListEl.textContent = entries.join(' · ');
+  knownListEl.textContent = entries.length
+    ? entries.join(' · ')
+    : 'None yet — call a name to reveal a paper.';
 }
 
 function render() {
   ensureSeats();
+  const couch = couchSeats(state.rules);
   const counts = couchCounts(state);
   document.getElementById('score-a').textContent = String(counts.A);
   document.getElementById('score-b').textContent = String(counts.B);
+  document.getElementById('score-a-need').textContent = ` / ${state.rules.teamA}`;
+  document.getElementById('score-b-need').textContent = ` / ${state.rules.teamB}`;
   document.getElementById('move-count').textContent = String(state.moveCount);
 
   const cSeat = callerSeat(state.seats);
@@ -162,7 +181,7 @@ function render() {
   for (const el of boardEl.querySelectorAll('.seat')) {
     const i = Number(el.dataset.seat);
     const pid = state.seats[i];
-    el.classList.toggle('is-couch', COUCH.includes(i));
+    el.classList.toggle('is-couch', couch.includes(i));
     el.classList.toggle('is-empty', pid == null);
     el.classList.toggle('is-caller', i === cSeat && pid != null && !state.winner);
     el.classList.remove('team-A', 'team-B');
@@ -177,7 +196,7 @@ function render() {
     const paperText = nameOnPaper(state, pid);
     const known = paperIsKnown(pid);
     el.innerHTML = `
-      <span class="seat-label">${COUCH.includes(i) ? 'couch' : `seat ${i + 1}`} · ${player.team}</span>
+      <span class="seat-label">${couch.includes(i) ? 'couch' : `seat ${i + 1}`} · ${player.team}</span>
       <span class="seat-name">${player.name}</span>
       <div class="seat-paper ${known ? 'is-known' : 'is-hidden'}" title="${known ? 'Known paper' : 'Hidden paper'}">${paperText}</div>
     `;
@@ -196,7 +215,6 @@ function render() {
     btn.className = `call-${p.team}`;
     if (calledNames.has(p.id)) btn.classList.add('is-revealed');
     btn.disabled = !legal.includes(p.id);
-    btn.title = calledNames.has(p.id) ? 'Called before this game' : '';
     btn.addEventListener('click', () => doCall(p.id));
     callGrid.appendChild(btn);
   }
@@ -213,7 +231,6 @@ function render() {
   document.getElementById('btn-toggle-papers').textContent = showPapers
     ? 'Hide papers'
     : 'Show papers';
-
   renderKnownList();
 }
 
@@ -266,4 +283,5 @@ for (const id of ['rule-own', 'rule-repeat']) {
 }
 
 buildNamesForm();
+updateLead();
 newGame();

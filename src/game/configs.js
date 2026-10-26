@@ -1,34 +1,34 @@
 import {
-  COUCH,
-  DEFAULT_NAMES,
-  SEAT_COUNT,
   checkWinner,
   createInitialState,
+  namesForCount,
   shuffle,
 } from './engine.js';
+import {
+  DEFAULT_RULES,
+  MAX_RAW_LAYOUTS,
+  couchSeats,
+  estimatedRawLayouts,
+  mirrorSeatMap,
+  normalizeRules,
+} from './rules.js';
 
 /**
- * Reflection across the vertical axis through seat 0 (top of the circle).
- * Couch seats 0..3 are fixed in space, so only this mirror is a board symmetry.
- */
-export const MIRROR_SEATS = Object.freeze([0, 8, 7, 6, 5, 4, 3, 2, 1]);
-
-/**
- * Team seating layout: length 9, each cell 'A' | 'B' | null (empty).
+ * Team seating layout: length seatCount, each cell 'A' | 'B' | null (empty).
  * @typedef {(('A'|'B'|null)[])} TeamLayout
  */
 
 /**
  * @typedef {object} SeatingConfig
- * @property {string} id - canonical code, e.g. "AAAB.BBBA"
+ * @property {string} id
  * @property {TeamLayout} layout
  * @property {number} empty
  * @property {{ A: number, B: number }} couch
  * @property {boolean} emptyOnCouch
  * @property {'A'|'B'} callerTeam
- * @property {string} situation - bucket key for stats
- * @property {number} orbitSize - how many raw layouts map to this canonical form
- * @property {boolean} terminal - already a win (4 on couch)
+ * @property {string} situation
+ * @property {number} orbitSize
+ * @property {boolean} terminal
  */
 
 /** @param {TeamLayout} layout */
@@ -38,7 +38,6 @@ export function layoutToCode(layout) {
 
 /** @param {string} code */
 export function codeToLayout(code) {
-  if (code.length !== SEAT_COUNT) throw new Error('Bad seating code length');
   return [...code].map((ch) => {
     if (ch === '.') return null;
     if (ch === 'A' || ch === 'B') return ch;
@@ -46,11 +45,11 @@ export function codeToLayout(code) {
   });
 }
 
-/** @param {string} code */
-export function mirrorCode(code) {
+/** @param {string} code @param {number[]} mirror */
+export function mirrorCode(code, mirror) {
   const chars = [...code];
-  const out = Array(SEAT_COUNT);
-  for (let i = 0; i < SEAT_COUNT; i++) out[MIRROR_SEATS[i]] = chars[i];
+  const out = Array(code.length);
+  for (let i = 0; i < code.length; i++) out[mirror[i]] = chars[i];
   return out.join('');
 }
 
@@ -59,22 +58,20 @@ export function swapTeamsCode(code) {
   return code.replaceAll('A', 'X').replaceAll('B', 'A').replaceAll('X', 'B');
 }
 
-/**
- * Lexicographically smallest code among a layout and its mirror
- * (identical / mirrored placements collapse).
- * @param {string} code
- */
-export function canonicalCode(code) {
-  const mirrored = mirrorCode(code);
+/** @param {string} code @param {number[]} mirror */
+export function canonicalCode(code, mirror) {
+  const mirrored = mirrorCode(code, mirror);
   return code <= mirrored ? code : mirrored;
 }
 
-/**
- * Also collapse A↔B relabeling (useful when strategies are symmetric).
- * @param {string} code
- */
-export function canonicalCodeWithTeamSwap(code) {
-  return [code, mirrorCode(code), swapTeamsCode(code), mirrorCode(swapTeamsCode(code))].sort()[0];
+/** @param {string} code @param {number[]} mirror */
+export function canonicalCodeWithTeamSwap(code, mirror) {
+  return [
+    code,
+    mirrorCode(code, mirror),
+    swapTeamsCode(code),
+    mirrorCode(swapTeamsCode(code), mirror),
+  ].sort()[0];
 }
 
 /** @param {number} n @param {number} k */
@@ -99,38 +96,41 @@ function combinations(n, k) {
 }
 
 /**
- * Encode empty seat + which occupied seats belong to team A.
- * Remaining occupied seats are team B.
  * @param {number} empty
  * @param {number[]} aSeats
+ * @param {number} seatCount
  */
-export function encodeLayout(empty, aSeats) {
+export function encodeLayout(empty, aSeats, seatCount) {
   /** @type {TeamLayout} */
-  const layout = Array(SEAT_COUNT).fill('B');
+  const layout = Array(seatCount).fill('B');
   layout[empty] = null;
   for (const s of aSeats) layout[s] = 'A';
   return layout;
 }
 
-/** @param {TeamLayout} layout */
-export function describeLayout(layout) {
+/**
+ * @param {TeamLayout} layout
+ * @param {import('./rules.js').GameRules} rules
+ */
+export function describeLayout(layout, rules) {
   const empty = layout.indexOf(null);
+  const couch = couchSeats(rules);
   let a = 0;
   let b = 0;
-  for (const seat of COUCH) {
+  for (const seat of couch) {
     const t = layout[seat];
     if (t === 'A') a++;
     else if (t === 'B') b++;
   }
-  const emptyOnCouch = COUCH.includes(empty);
-  // Same rule as engine.callerSeat: empty is on the caller's right → seat empty+1.
-  const callerSeatIdx = (empty + 1) % SEAT_COUNT;
+  const emptyOnCouch = couch.includes(empty);
+  const callerSeatIdx = (empty + 1) % rules.seatCount;
   const callerTeam = /** @type {'A'|'B'} */ (layout[callerSeatIdx]);
+  const mid = Math.min(rules.couchSize, rules.seatCount - 1);
   const emptyZone = emptyOnCouch
     ? 'couch'
-    : empty === 4
+    : empty === mid
       ? 'mid'
-      : empty === 5 || empty === 8
+      : empty === mid + 1 || empty === rules.seatCount - 1
         ? 'near'
         : 'far';
   const situation = `couch ${a}-${b} · empty ${emptyZone}@${empty} · caller ${callerTeam}`;
@@ -141,52 +141,69 @@ export function describeLayout(layout) {
     callerTeam,
     emptyZone,
     situation,
-    terminal: a === 4 || b === 4,
+    terminal: a === rules.teamA || b === rules.teamB,
   };
 }
 
 /**
- * All raw team+empty seatings: 9 × C(8,4) = 630.
+ * @param {import('./rules.js').GameRules} [rules]
  * @returns {TeamLayout[]}
  */
-export function allRawLayouts() {
-  const picks = combinations(8, 4);
+export function allRawLayouts(rules = DEFAULT_RULES) {
+  const r = normalizeRules(rules);
+  const picks = combinations(r.players, r.teamA);
   /** @type {TeamLayout[]} */
   const layouts = [];
-  for (let empty = 0; empty < SEAT_COUNT; empty++) {
+  for (let empty = 0; empty < r.seatCount; empty++) {
     const occupied = [];
-    for (let s = 0; s < SEAT_COUNT; s++) {
+    for (let s = 0; s < r.seatCount; s++) {
       if (s !== empty) occupied.push(s);
     }
     for (const pick of picks) {
       const aSeats = pick.map((i) => occupied[i]);
-      layouts.push(encodeLayout(empty, aSeats));
+      layouts.push(encodeLayout(empty, aSeats, r.seatCount));
     }
   }
   return layouts;
 }
 
 /**
- * Unique seatings under reflection (and optionally A↔B swap).
- * @param {{ teamSwap?: boolean, playableOnly?: boolean }} [opts]
- * @returns {{ rawCount: number, configs: SeatingConfig[], terminalCount: number }}
+ * @param {{
+ *   teamSwap?: boolean,
+ *   playableOnly?: boolean,
+ *   rules?: Partial<import('./rules.js').GameRules> | import('./rules.js').GameRules
+ * }} [opts]
  */
 export function uniqueSeatings(opts = {}) {
+  const rules = normalizeRules(opts.rules ?? DEFAULT_RULES);
   const teamSwap = opts.teamSwap ?? false;
   const playableOnly = opts.playableOnly ?? true;
-  const raw = allRawLayouts();
+  const rawEstimate = estimatedRawLayouts(rules);
+  if (rawEstimate > MAX_RAW_LAYOUTS) {
+    return {
+      rawCount: rawEstimate,
+      configs: [],
+      terminalCount: 0,
+      truncated: true,
+      rules,
+    };
+  }
+
+  const raw = allRawLayouts(rules);
+  const mirror = mirrorSeatMap(rules.seatCount);
   /** @type {Map<string, { layout: TeamLayout, orbitSize: number }>} */
   const map = new Map();
 
   for (const layout of raw) {
     const code = layoutToCode(layout);
-    const key = teamSwap ? canonicalCodeWithTeamSwap(code) : canonicalCode(code);
+    const key = teamSwap
+      ? canonicalCodeWithTeamSwap(code, mirror)
+      : canonicalCode(code, mirror);
     const prev = map.get(key);
     if (prev) {
       prev.orbitSize += 1;
       continue;
     }
-    // Prefer storing the canonical code's own layout
     map.set(key, { layout: codeToLayout(key), orbitSize: 1 });
   }
 
@@ -194,7 +211,7 @@ export function uniqueSeatings(opts = {}) {
   const configs = [];
   let terminalCount = 0;
   for (const [id, { layout, orbitSize }] of map) {
-    const meta = describeLayout(layout);
+    const meta = describeLayout(layout, rules);
     if (meta.terminal) terminalCount += 1;
     if (playableOnly && meta.terminal) continue;
     configs.push({
@@ -216,62 +233,87 @@ export function uniqueSeatings(opts = {}) {
     rawCount: raw.length,
     configs,
     terminalCount,
+    truncated: false,
+    rules,
   };
 }
 
 /**
- * Official start layout: empty at seat 4, teams alternate on occupied seats,
- * couch is 2+2.
+ * @param {import('./rules.js').GameRules} [rules]
  * @returns {TeamLayout}
  */
-export function officialStartLayout() {
+export function officialStartLayout(rules = DEFAULT_RULES) {
+  const r = normalizeRules(rules);
   /** @type {TeamLayout} */
-  const layout = Array(SEAT_COUNT).fill(null);
-  let teamFlip = 0;
-  for (let s = 0; s < SEAT_COUNT; s++) {
-    if (s === 4) continue;
-    layout[s] = teamFlip % 2 === 0 ? 'A' : 'B';
-    teamFlip += 1;
+  const layout = Array(r.seatCount).fill(null);
+  let aLeft = r.teamA;
+  let bLeft = r.teamB;
+  let placed = 0;
+  for (let s = 0; s < r.seatCount; s++) {
+    if (s === r.emptyStart) continue;
+    if (aLeft > 0 && (placed % 2 === 0 || bLeft === 0)) {
+      layout[s] = 'A';
+      aLeft--;
+    } else {
+      layout[s] = 'B';
+      bLeft--;
+    }
+    placed++;
   }
   return layout;
 }
 
 /**
- * Build a full game state from a team layout + shuffled papers / player seats.
  * @param {TeamLayout} layout
- * @param {Partial<{ names: string[], seed: number, noRepeat: boolean, noOwnPaper: boolean, papers: number[] }>} [opts]
+ * @param {Partial<{
+ *   names: string[],
+ *   seed: number,
+ *   noRepeat: boolean,
+ *   noOwnPaper: boolean,
+ *   papers: number[],
+ *   rules: Partial<import('./rules.js').GameRules> | import('./rules.js').GameRules
+ * }>} [opts]
  */
 export function createStateFromLayout(layout, opts = {}) {
-  const names = opts.names ?? DEFAULT_NAMES;
-  if (names.length !== 8) throw new Error('Exactly 8 names required');
+  const teamA = layout.filter((x) => x === 'A').length;
+  const teamB = layout.filter((x) => x === 'B').length;
+  const r = normalizeRules({
+    ...(opts.rules ?? {}),
+    players: teamA + teamB,
+    teamA,
+    teamB,
+    emptyStart: layout.indexOf(null),
+    couchSize: opts.rules?.couchSize,
+  });
 
-  const empty = layout.indexOf(null);
-  if (empty < 0) throw new Error('Layout needs one empty seat');
+  const names = opts.names ?? namesForCount(r.players);
+  if (names.length !== r.players) throw new Error(`Exactly ${r.players} names required`);
+  if (layout.length !== r.seatCount) throw new Error('Layout length mismatch');
 
   const aSeats = [];
   const bSeats = [];
-  for (let s = 0; s < SEAT_COUNT; s++) {
+  for (let s = 0; s < r.seatCount; s++) {
     if (layout[s] === 'A') aSeats.push(s);
     else if (layout[s] === 'B') bSeats.push(s);
   }
-  if (aSeats.length !== 4 || bSeats.length !== 4) {
-    throw new Error('Layout must have 4A + 4B');
-  }
 
-  const players = names.map((name, id) => ({
-    id,
-    name,
-    team: /** @type {'A'|'B'} */ (id % 2 === 0 ? 'A' : 'B'),
-  }));
-  const teamA = players.filter((p) => p.team === 'A').map((p) => p.id);
-  const teamB = players.filter((p) => p.team === 'B').map((p) => p.id);
+  const base = createInitialState({
+    names,
+    rules: r,
+    seed: opts.seed,
+    noRepeat: opts.noRepeat,
+    noOwnPaper: opts.noOwnPaper,
+    papers: opts.papers,
+  });
 
+  const aIds = base.players.filter((p) => p.team === 'A').map((p) => p.id);
+  const bIds = base.players.filter((p) => p.team === 'B').map((p) => p.id);
   const seed = opts.seed;
-  const aOrder = shuffle(teamA, seed == null ? undefined : (seed ^ 0x11111111) >>> 0);
-  const bOrder = shuffle(teamB, seed == null ? undefined : (seed ^ 0x22222222) >>> 0);
+  const aOrder = shuffle(aIds, seed == null ? undefined : (seed ^ 0x11111111) >>> 0);
+  const bOrder = shuffle(bIds, seed == null ? undefined : (seed ^ 0x22222222) >>> 0);
 
   /** @type {(number|null)[]} */
-  const seats = Array(SEAT_COUNT).fill(null);
+  const seats = Array(r.seatCount).fill(null);
   aSeats.forEach((seat, i) => {
     seats[seat] = aOrder[i];
   });
@@ -279,21 +321,11 @@ export function createStateFromLayout(layout, opts = {}) {
     seats[seat] = bOrder[i];
   });
 
-  const papers = opts.papers
-    ? [...opts.papers]
-    : shuffle(
-        players.map((p) => p.id),
-        seed == null ? undefined : (seed ^ 0x33333333) >>> 0,
-      );
-
   /** @type {import('./engine.js').GameState} */
   const state = {
+    ...base,
     seats,
-    papers,
-    players,
     lastCalled: null,
-    noRepeat: opts.noRepeat ?? true,
-    noOwnPaper: opts.noOwnPaper ?? true,
     moveCount: 0,
     winner: null,
   };
@@ -301,21 +333,13 @@ export function createStateFromLayout(layout, opts = {}) {
   return state;
 }
 
-/**
- * Convenience: official start via layout helper (same shape as createInitialState).
- * @param {Partial<{ names: string[], seed: number, noRepeat: boolean, noOwnPaper: boolean, papers: number[] }>} [opts]
- */
 export function createOfficialState(opts = {}) {
-  // Keep createInitialState as source of truth for the official seating of people ids.
   return createInitialState(opts);
 }
 
-/**
- * Aggregate unique configs into situation buckets.
- * @param {SeatingConfig[]} configs
- */
+/** @param {import('./configs.js').SeatingConfig[]} configs */
 export function groupBySituation(configs) {
-  /** @type {Map<string, SeatingConfig[]>} */
+  /** @type {Map<string, import('./configs.js').SeatingConfig[]>} */
   const map = new Map();
   for (const c of configs) {
     const list = map.get(c.situation) ?? [];
@@ -330,4 +354,12 @@ export function groupBySituation(configs) {
       configs: items,
     }))
     .sort((a, b) => b.count - a.count || a.situation.localeCompare(b.situation));
+}
+
+// Back-compat helpers used by older tests
+export function mirrorCodeDefault(code) {
+  return mirrorCode(code, mirrorSeatMap(code.length));
+}
+export function canonicalCodeDefault(code) {
+  return canonicalCode(code, mirrorSeatMap(code.length));
 }

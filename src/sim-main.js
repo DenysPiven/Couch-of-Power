@@ -4,7 +4,12 @@ import {
   groupBySituation,
   uniqueSeatings,
 } from './game/configs.js';
+import { estimatedRawLayouts, MAX_RAW_LAYOUTS, rulesLabel } from './game/rules.js';
 import { playGame, strategyById } from './game/strategies.js';
+import { loadRules, saveSimRun } from './storage.js';
+import { bindRulesForm, rulesPanelHtml } from './ui/rules-form.js';
+
+document.getElementById('rules-mount').innerHTML = rulesPanelHtml();
 
 const form = document.getElementById('sim-form');
 const statusEl = document.getElementById('sim-status');
@@ -15,6 +20,14 @@ const startModeEl = document.getElementById('start-mode');
 const symmetryEl = document.getElementById('symmetry');
 
 let abort = false;
+let rules = loadRules();
+
+const rulesForm = bindRulesForm({
+  onApply: (next) => {
+    rules = next;
+    renderCensus();
+  },
+});
 
 renderCensus();
 syncStartModeUi();
@@ -27,6 +40,7 @@ form.addEventListener('submit', async (e) => {
   btnRun.disabled = true;
   btnStop.disabled = false;
 
+  rules = rulesForm.getRules();
   const startMode = startModeEl.value;
   const teamSwap = symmetryEl.value === 'mirror-swap';
   const gamesPer = clamp(Number(document.getElementById('games-per').value) || 1, 1, 200);
@@ -34,20 +48,32 @@ form.addEventListener('submit', async (e) => {
   const maxMoves = clamp(Number(document.getElementById('max-moves').value) || 80, 4, 500);
   const seedRaw = document.getElementById('seed').value;
   const baseSeed = seedRaw === '' ? Math.floor(Math.random() * 1e9) : Number(seedRaw);
-  const strategyA = strategyById(document.getElementById('strategy-a').value);
-  const strategyB = strategyById(document.getElementById('strategy-b').value);
+  const strategyAId = document.getElementById('strategy-a').value;
+  const strategyBId = document.getElementById('strategy-b').value;
+  const strategyA = strategyById(strategyAId);
+  const strategyB = strategyById(strategyBId);
   const noOwnPaper = document.getElementById('sim-own').checked;
   const noRepeat = document.getElementById('sim-repeat').checked;
 
-  /** @type {{ layout: import('./game/configs.js').TeamLayout, situation: string, id: string }[]} */
+  /** @type {{ layout: import('./game/configs.js').TeamLayout|null, situation: string, id: string }[]} */
   let jobs = [];
   if (startMode === 'official') {
     for (let i = 0; i < gamesOfficial; i++) {
-      jobs.push({ layout: null, situation: 'official 2-2 · empty mid@4 · caller varies', id: 'official' });
+      jobs.push({
+        layout: null,
+        situation: `official · ${rulesLabel(rules)}`,
+        id: 'official',
+      });
     }
   } else {
-    const { configs } = uniqueSeatings({ teamSwap, playableOnly: true });
-    for (const cfg of configs) {
+    const census = uniqueSeatings({ teamSwap, playableOnly: true, rules });
+    if (census.truncated) {
+      statusEl.textContent = `Too many layouts (~${census.rawCount.toLocaleString()}). Lower players/team size (limit ${MAX_RAW_LAYOUTS}).`;
+      btnRun.disabled = false;
+      btnStop.disabled = true;
+      return;
+    }
+    for (const cfg of census.configs) {
       for (let g = 0; g < gamesPer; g++) {
         jobs.push({ layout: cfg.layout, situation: cfg.situation, id: cfg.id });
       }
@@ -75,8 +101,8 @@ form.addEventListener('submit', async (e) => {
     const seed = (baseSeed + i * 9973) >>> 0;
     const start =
       job.layout == null
-        ? createInitialState({ seed, noOwnPaper, noRepeat })
-        : createStateFromLayout(job.layout, { seed, noOwnPaper, noRepeat });
+        ? createInitialState({ seed, noOwnPaper, noRepeat, rules })
+        : createStateFromLayout(job.layout, { seed, noOwnPaper, noRepeat, rules });
 
     seatingsUsed.add(job.id);
     const { winner, moves } = playGame(start, strategyA, strategyB, maxMoves);
@@ -121,8 +147,7 @@ form.addEventListener('submit', async (e) => {
     }
 
     if (i % batch === 0 || i === jobs.length - 1) {
-      const pct = ((i + 1) / total) * 100;
-      progressEl.style.width = `${pct}%`;
+      progressEl.style.width = `${((i + 1) / total) * 100}%`;
       statusEl.textContent = `Done ${i + 1} / ${total}`;
       renderStats({
         games: i + 1,
@@ -141,9 +166,43 @@ form.addEventListener('submit', async (e) => {
     }
   }
 
-  statusEl.textContent = abort
-    ? `Stopped after ${winsA + winsB + draws} games.`
-    : `Done: ${winsA + winsB + draws} games · ${seatingsUsed.size} seatings (seed ${baseSeed}).`;
+  const finishedGames = winsA + winsB + draws;
+  if (!abort && finishedGames > 0) {
+    const situations = [...bySit.entries()].map(([situation, b]) => ({
+      situation,
+      layouts: b.layouts.size,
+      games: b.games,
+      winsA: b.winsA,
+      winsB: b.winsB,
+      draws: b.draws,
+      avgMoves: b.winGames ? b.moveSum / b.winGames : null,
+    }));
+    saveSimRun({
+      rules,
+      startMode,
+      symmetry: symmetryEl.value,
+      strategyA: strategyAId,
+      strategyB: strategyBId,
+      noOwnPaper,
+      noRepeat,
+      seed: baseSeed,
+      games: finishedGames,
+      seatings: seatingsUsed.size,
+      winsA,
+      winsB,
+      draws,
+      avgMoves: winGames ? moveSum / winGames : null,
+      minMoves: winGames ? minMoves : null,
+      maxMoves: winGames ? maxMovesSeen : null,
+      situations,
+    });
+    statusEl.textContent = `Done: ${finishedGames} games · saved to Stats (seed ${baseSeed}).`;
+  } else {
+    statusEl.textContent = abort
+      ? `Stopped after ${finishedGames} games.`
+      : `Done: ${finishedGames} games (seed ${baseSeed}).`;
+  }
+
   btnRun.disabled = false;
   btnStop.disabled = true;
 });
@@ -153,24 +212,36 @@ btnStop.addEventListener('click', () => {
 });
 
 function renderCensus() {
+  rules = rulesForm.getRules();
   const teamSwap = symmetryEl.value === 'mirror-swap';
-  const allMirror = uniqueSeatings({ teamSwap: false, playableOnly: false });
-  const allSwap = uniqueSeatings({ teamSwap: true, playableOnly: false });
-  const playable = uniqueSeatings({ teamSwap, playableOnly: true });
+  const allMirror = uniqueSeatings({ teamSwap: false, playableOnly: false, rules });
+  const allSwap = uniqueSeatings({ teamSwap: true, playableOnly: false, rules });
+  const playable = uniqueSeatings({ teamSwap, playableOnly: true, rules });
   const buckets = groupBySituation(playable.configs);
+  const raw = estimatedRawLayouts(rules);
 
-  document.getElementById('census-raw').textContent = String(allMirror.rawCount);
-  document.getElementById('census-mirror').textContent = String(
-    uniqueSeatings({ teamSwap: false, playableOnly: false }).configs.length,
-  );
-  document.getElementById('census-swap').textContent = String(allSwap.configs.length);
-  document.getElementById('census-playable').textContent = String(playable.configs.length);
-  document.getElementById('census-terminal').textContent = String(allMirror.terminalCount);
-  document.getElementById('census-buckets').textContent = String(buckets.length);
+  document.getElementById('census-raw').textContent = raw.toLocaleString();
+  document.getElementById('census-mirror').textContent = allMirror.truncated
+    ? '—'
+    : String(allMirror.configs.length);
+  document.getElementById('census-swap').textContent = allSwap.truncated
+    ? '—'
+    : String(allSwap.configs.length);
+  document.getElementById('census-playable').textContent = playable.truncated
+    ? '—'
+    : String(playable.configs.length);
+  document.getElementById('census-terminal').textContent = playable.truncated
+    ? '—'
+    : String(allMirror.terminalCount);
+  document.getElementById('census-buckets').textContent = playable.truncated
+    ? '—'
+    : String(buckets.length);
 
-  document.getElementById('census-summary').textContent = teamSwap
-    ? `Using mirror + A↔B swap: ${playable.configs.length} playable unique seatings in ${buckets.length} situation buckets.`
-    : `Using mirror only: ${playable.configs.length} playable unique seatings in ${buckets.length} situation buckets.`;
+  document.getElementById('census-summary').textContent = playable.truncated
+    ? `Too many layouts (~${raw.toLocaleString()} > ${MAX_RAW_LAYOUTS}). Use official start or reduce players.`
+    : teamSwap
+      ? `Mirror + A↔B: ${playable.configs.length} playable seatings in ${buckets.length} buckets · ${rulesLabel(rules)}`
+      : `Mirror only: ${playable.configs.length} playable seatings in ${buckets.length} buckets · ${rulesLabel(rules)}`;
 }
 
 function syncStartModeUi() {
@@ -203,14 +274,10 @@ function renderStats(s) {
   document.getElementById('pct-a').textContent = `${pctA.toFixed(1)}%`;
   document.getElementById('pct-b').textContent = `${pctB.toFixed(1)}%`;
   document.getElementById('pct-draw').textContent = `${pctD.toFixed(1)}%`;
-
   document.getElementById('result-summary').textContent =
     `A ${s.winsA} · B ${s.winsB} · limit/draw ${s.draws} (of ${s.games}, seed ${s.baseSeed})`;
 }
 
-/**
- * @param {Map<string, { games: number, winsA: number, winsB: number, draws: number, moveSum: number, winGames: number, layouts: Set<string> }>} bySit
- */
 function renderSituationTable(bySit) {
   const body = document.getElementById('sit-body');
   const rows = [...bySit.entries()]

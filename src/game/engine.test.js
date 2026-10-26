@@ -128,7 +128,21 @@ describe('keep-turn without no-repeat', () => {
 });
 
 describe('couch seats', () => {
-  it('are the first four indices', () => {
+  it('are the first four indices by default', () => {
     assert.deepEqual([...COUCH], [0, 1, 2, 3]);
+  });
+});
+
+describe('custom rules', () => {
+  it('wins when a full team is on the couch', () => {
+    const s = createInitialState({
+      rules: { players: 4, teamA: 2, teamB: 2, couchSize: 2, emptyStart: 2 },
+      seed: 1,
+      papers: [0, 1, 2, 3],
+      noOwnPaper: false,
+      noRepeat: false,
+    });
+    assert.equal(s.rules.seatCount, 5);
+    assert.equal(s.players.filter((p) => p.team === 'A').length, 2);
   });
 });

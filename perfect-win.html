@@ -195,20 +195,7 @@
         z-index: 8;
         scale: 1.06;
       }
-      .token .paper {
-        position: absolute;
-        bottom: -11px; left: 50%;
-        transform: translateX(-50%);
-        background: #f4ebe0;
-        color: #1a2420;
-        font-size: 10px; font-weight: 600;
-        padding: 2px 7px; border-radius: 999px;
-        white-space: nowrap;
-        border: 1px solid rgba(26,36,32,0.12);
-        opacity: 0;
-        transition: opacity 0.3s ease;
-      }
-      .show-papers .token .paper { opacity: 1; }
+      .token .paper { display: none !important; } /* person name is fixed; papers shown only in captions */
       .token.flying { z-index: 12; }
 
       .trail {
@@ -247,8 +234,12 @@
         border: 1.5px dashed rgba(210, 180, 140, 0.35);
         background: rgba(0,0,0,0.18);
         display: grid; place-items: center;
-        font-size: 11px; font-weight: 700;
+        font-size: 10px; font-weight: 700;
         color: var(--muted);
+        padding: 2px;
+        text-align: center;
+        line-height: 1.1;
+        overflow: hidden;
         transition: background 0.35s ease, border-color 0.35s ease, color 0.35s ease, transform 0.35s ease;
       }
       .couch-slot.filled-A {
@@ -472,7 +463,7 @@
           const el = document.createElement('div');
           el.className = `token team-${seat.team}`;
           el.dataset.name = seat.name;
-          el.innerHTML = `<span>${seat.name}</span><span class="paper"></span>`;
+          el.innerHTML = `<span class="who">${seat.name}</span>`;
           board.appendChild(el);
           tokens.set(seat.name, el);
         }
@@ -512,7 +503,7 @@
             slot.textContent = String(i + 1);
             return;
           }
-          slot.textContent = person.name.length > 5 ? person.name.slice(0, 5) : person.name;
+          slot.textContent = person.name;
           slot.title = person.name;
           slot.classList.add(person.team === 'A' ? 'filled-A' : 'filled-B');
           if (popName && person.name === popName) slot.classList.add('pop');
@@ -532,7 +523,6 @@
           if (!seat) return;
           occupied.add(seat.name);
           const el = tokens.get(seat.name);
-          el.querySelector('.paper').textContent = frame.papers[seat.name] ?? '';
           el.classList.toggle('is-caller', idx === frame.callerSeat);
           el.classList.toggle('is-mover', seat.name === mover);
           if (!(animateMover && seat.name === mover)) {
@@ -669,8 +659,8 @@
               : `→ йде в empty (місце ${next.toSeat}).`;
           setCopy({
             eyebrow: `Хід ${next.move} з 8`,
-            headline: `${next.callerBefore} кличе «${next.call}»`,
-            sub: `${next.mover} ${couchNote} Папери міняються. Наступний caller знову A.`,
+            headline: `${next.callerBefore} кличе папірець «${next.call}»`,
+            sub: `${next.mover} (це людина) ${couchNote} Люди свої імена не міняють — лише сідають в empty і міняються папірцями.`,
             callout: `Диван зараз ${next.couch.A}–${next.couch.B}. Keep-turn збережено.`,
             badge: next.move === 8 ? 'Forced win' : 'Keep the turn',
           });

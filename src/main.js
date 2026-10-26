@@ -11,6 +11,7 @@ import {
   namesForCount,
 } from './game/engine.js';
 import { loadRules } from './storage.js';
+import './theme.js';
 import { bindRulesForm, rulesPanelHtml } from './ui/rules-form.js';
 
 const boardEl = document.getElementById('board');

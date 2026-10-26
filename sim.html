@@ -12,6 +12,20 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="/src/styles/main.css" />
+    <script>
+      (() => {
+        try {
+          const saved = localStorage.getItem('fotc-theme-v1');
+          const theme =
+            saved === 'dark' || saved === 'light'
+              ? saved
+              : matchMedia('(prefers-color-scheme: dark)').matches
+                ? 'dark'
+                : 'light';
+          document.documentElement.setAttribute('data-theme', theme);
+        } catch (_) {}
+      })();
+    </script>
   </head>
   <body>
     <header class="app-header">
@@ -20,6 +34,10 @@
         <a href="./index.html">Game</a>
         <a href="./sim.html" aria-current="page">Simulations</a>
         <a href="./stats.html">Stats</a>
+        <button type="button" class="theme-toggle" id="theme-toggle" aria-pressed="false">
+          <span class="theme-toggle-icon" aria-hidden="true">☾</span>
+          <span class="theme-toggle-label">Dark</span>
+        </button>
       </nav>
     </header>
 

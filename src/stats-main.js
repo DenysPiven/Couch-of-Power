@@ -1,4 +1,5 @@
 import { clearSimRuns, deleteSimRun, loadSimRuns } from './storage.js';
+import './theme.js';
 
 const listEl = document.getElementById('runs-list');
 const emptyEl = document.getElementById('runs-empty');

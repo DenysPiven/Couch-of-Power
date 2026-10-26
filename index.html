@@ -70,10 +70,17 @@
             <p class="hint" id="call-hint">Pick a name from someone else’s paper.</p>
             <div class="call-grid" id="call-grid"></div>
             <div class="toolbar">
-              <button type="button" id="btn-toggle-papers">Show papers</button>
               <button type="button" id="btn-undo" disabled>Undo</button>
               <button type="button" class="primary" id="btn-new">New game</button>
             </div>
+            <label class="toggle">
+              <input type="checkbox" id="toggle-hidden-names" />
+              <span class="toggle-ui" aria-hidden="true"></span>
+              <span class="toggle-text">
+                <strong id="toggle-hidden-label">Show hidden names</strong>
+                <span class="hint" id="toggle-hidden-hint">Reveal every still-secret paper on the board</span>
+              </span>
+            </label>
             <div class="checks">
               <label>
                 <input type="checkbox" id="rule-own" checked />

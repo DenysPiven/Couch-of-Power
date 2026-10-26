@@ -20,6 +20,7 @@ Browser game and simulations for the party game **Couch of Power** (also known a
 | [Game](./index.html) | Manual play: circle, couch, papers, moves, win |
 | [Simulations](./sim.html) | Win stats across unique seatings (mirrors removed) |
 | [Stats](./stats.html) | Saved simulation runs from this browser |
+| [Perfect win](./perfect-win.html) | Autoplay animation: forced 8-move win with all names known |
 
 ## Development
 

@@ -10,6 +10,7 @@ export default defineConfig({
         main: resolve(__dirname, 'index.html'),
         sim: resolve(__dirname, 'sim.html'),
         stats: resolve(__dirname, 'stats.html'),
+        perfectWin: resolve(__dirname, 'perfect-win.html'),
       },
     },
   },

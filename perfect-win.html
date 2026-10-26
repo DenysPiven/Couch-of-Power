@@ -1,0 +1,664 @@
+<!doctype html>
+<html lang="uk" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Couch of Power — perfect-info win</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Sora:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg0: #0c1210;
+        --bg1: #15201b;
+        --ink: #eef4f0;
+        --muted: #9aafa4;
+        --a: #3dba8a;
+        --a-deep: #1d6b4d;
+        --b: #e07a5f;
+        --b-deep: #8a3d2c;
+        --couch: #c4a484;
+        --empty: #5c7067;
+        --accent: #d4b483;
+        --line: rgba(238, 244, 240, 0.12);
+        --font-display: 'Fraunces', Georgia, serif;
+        --font-body: 'Sora', system-ui, sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: var(--bg0);
+        color: var(--ink);
+        font-family: var(--font-body);
+        overflow: hidden;
+      }
+
+      body {
+        background:
+          radial-gradient(ellipse 80% 55% at 50% -10%, #1f332a 0%, transparent 55%),
+          radial-gradient(ellipse 50% 40% at 85% 80%, #2a1c16 0%, transparent 50%),
+          radial-gradient(ellipse 40% 35% at 10% 70%, #15252e 0%, transparent 45%),
+          var(--bg0);
+      }
+
+      .stage {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        padding: 28px 40px 24px;
+        gap: 8px;
+      }
+
+      .top {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 24px;
+      }
+
+      .brand {
+        font-family: var(--font-display);
+        font-size: clamp(28px, 3.2vw, 42px);
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        margin: 0;
+      }
+      .brand em {
+        font-style: normal;
+        color: var(--accent);
+      }
+
+      .badge {
+        font-size: 12px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--muted);
+        border: 1px solid var(--line);
+        padding: 8px 12px;
+        border-radius: 999px;
+        white-space: nowrap;
+      }
+
+      .main {
+        position: relative;
+        min-height: 0;
+        display: grid;
+        grid-template-columns: 1.15fr 0.85fr;
+        gap: 28px;
+        align-items: center;
+      }
+
+      .board-wrap {
+        position: relative;
+        aspect-ratio: 1;
+        max-height: 100%;
+        width: min(100%, 62vh);
+        margin: 0 auto;
+      }
+
+      .board {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        background:
+          radial-gradient(circle at 50% 42%, #24352e 0%, #18241f 55%, #101815 100%);
+        border: 1px solid var(--line);
+      }
+
+      .couch-arc {
+        position: absolute;
+        left: 50%;
+        top: 7%;
+        width: 58%;
+        height: 22%;
+        transform: translateX(-50%);
+        border-radius: 999px 999px 40px 40px;
+        background: linear-gradient(180deg, #5a4332, #3a2b20);
+        border: 1px solid rgba(196, 164, 132, 0.35);
+        box-shadow: inset 0 8px 16px rgba(0, 0, 0, 0.25);
+        opacity: 0.95;
+        pointer-events: none;
+      }
+      .couch-label {
+        position: absolute;
+        left: 50%;
+        top: 3%;
+        transform: translateX(-50%);
+        font-size: 11px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--couch);
+        opacity: 0.85;
+      }
+
+      .seat {
+        position: absolute;
+        width: 78px;
+        height: 78px;
+        margin: -39px 0 0 -39px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        transition:
+          left 0.85s cubic-bezier(0.22, 1, 0.36, 1),
+          top 0.85s cubic-bezier(0.22, 1, 0.36, 1),
+          transform 0.45s ease,
+          box-shadow 0.35s ease,
+          opacity 0.35s ease;
+        z-index: 2;
+      }
+      .seat.empty-slot {
+        border: 2px dashed var(--empty);
+        background: rgba(92, 112, 103, 0.12);
+        color: var(--empty);
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .seat.person {
+        border: 2px solid transparent;
+        color: #0c1210;
+        font-weight: 700;
+        font-size: 13px;
+      }
+      .seat.team-A {
+        background: radial-gradient(circle at 35% 30%, #6fd4a8, var(--a) 55%, var(--a-deep));
+      }
+      .seat.team-B {
+        background: radial-gradient(circle at 35% 30%, #f0a089, var(--b) 55%, var(--b-deep));
+        color: #1a0e0a;
+      }
+      .seat.caller {
+        box-shadow:
+          0 0 0 4px rgba(212, 180, 131, 0.35),
+          0 0 28px rgba(212, 180, 131, 0.45);
+        transform: scale(1.08);
+        z-index: 4;
+      }
+      .seat.mover {
+        box-shadow:
+          0 0 0 4px rgba(61, 186, 138, 0.4),
+          0 12px 30px rgba(0, 0, 0, 0.35);
+        z-index: 5;
+        animation: pulse 0.7s ease;
+      }
+      .seat .name {
+        line-height: 1.05;
+        text-align: center;
+        padding: 0 4px;
+      }
+      .seat .paper-chip {
+        position: absolute;
+        bottom: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #f7f1e8;
+        color: #1a2420;
+        font-size: 10px;
+        font-weight: 600;
+        padding: 2px 7px;
+        border-radius: 999px;
+        white-space: nowrap;
+        border: 1px solid rgba(26, 36, 32, 0.15);
+        opacity: 0;
+        transition: opacity 0.35s ease, transform 0.35s ease;
+      }
+      .show-papers .seat.person .paper-chip {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+
+      .ghost {
+        position: absolute;
+        width: 78px;
+        height: 78px;
+        margin: -39px 0 0 -39px;
+        border-radius: 50%;
+        pointer-events: none;
+        z-index: 6;
+        display: none;
+        place-items: center;
+        font-weight: 700;
+        font-size: 13px;
+        color: #0c1210;
+      }
+      .ghost.visible {
+        display: grid;
+      }
+
+      .side {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+        min-width: 0;
+      }
+
+      .caption {
+        min-height: 150px;
+      }
+      .eyebrow {
+        font-size: 12px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin: 0 0 8px;
+      }
+      .headline {
+        font-family: var(--font-display);
+        font-size: clamp(28px, 3.4vw, 44px);
+        line-height: 1.08;
+        margin: 0 0 12px;
+        letter-spacing: -0.02em;
+      }
+      .sub {
+        margin: 0;
+        color: var(--muted);
+        font-size: 16px;
+        line-height: 1.45;
+        max-width: 36ch;
+      }
+
+      .meter {
+        display: grid;
+        gap: 10px;
+      }
+      .meter-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .bars {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .bar {
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 12px 14px;
+      }
+      .bar strong {
+        display: block;
+        font-size: 28px;
+        font-family: var(--font-display);
+        line-height: 1;
+        margin-top: 4px;
+      }
+      .bar.a strong {
+        color: var(--a);
+      }
+      .bar.b strong {
+        color: var(--b);
+      }
+
+      .steps {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+      .step-dot {
+        width: 28px;
+        height: 8px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        transition: background 0.3s ease, transform 0.3s ease;
+      }
+      .step-dot.on {
+        background: var(--accent);
+        transform: scaleY(1.35);
+      }
+      .step-dot.done {
+        background: var(--a);
+      }
+
+      .callout {
+        border-left: 3px solid var(--accent);
+        padding: 10px 0 10px 14px;
+        color: var(--ink);
+        font-size: 15px;
+        line-height: 1.4;
+        min-height: 3.2em;
+      }
+
+      .bottom {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        color: var(--muted);
+        font-size: 12px;
+        letter-spacing: 0.04em;
+      }
+
+      .overlay {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        background: rgba(8, 12, 10, 0.72);
+        backdrop-filter: blur(8px);
+        z-index: 20;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.55s ease;
+      }
+      .overlay.show {
+        opacity: 1;
+      }
+      .overlay-card {
+        text-align: center;
+        max-width: 720px;
+        padding: 24px;
+      }
+      .overlay-card h2 {
+        font-family: var(--font-display);
+        font-size: clamp(36px, 5vw, 64px);
+        margin: 0 0 12px;
+        letter-spacing: -0.03em;
+      }
+      .overlay-card p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 18px;
+        line-height: 1.45;
+      }
+
+      .win-burst .board {
+        box-shadow: 0 0 80px rgba(61, 186, 138, 0.28);
+      }
+
+      @keyframes pulse {
+        0% {
+          transform: scale(1);
+        }
+        40% {
+          transform: scale(1.12);
+        }
+        100% {
+          transform: scale(1.05);
+        }
+      }
+
+      @media (max-width: 900px) {
+        .main {
+          grid-template-columns: 1fr;
+        }
+        .board-wrap {
+          width: min(100%, 48vh);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="stage" id="stage">
+      <div class="top">
+        <h1 class="brand">Couch of <em>Power</em></h1>
+        <div class="badge" id="badge">Perfect information</div>
+      </div>
+
+      <div class="main">
+        <div class="board-wrap" id="boardWrap">
+          <div class="couch-label">Couch</div>
+          <div class="couch-arc" aria-hidden="true"></div>
+          <div class="board" id="board"></div>
+          <div class="ghost" id="ghost"></div>
+        </div>
+
+        <div class="side">
+          <div class="caption">
+            <p class="eyebrow" id="eyebrow">Пролог</p>
+            <h2 class="headline" id="headline">Коли всі імена відомі</h2>
+            <p class="sub" id="sub">
+              Перша команда може форсувати перемогу за 8 ходів — і ніколи не віддати хід.
+            </p>
+          </div>
+
+          <div class="meter">
+            <div class="meter-row">
+              <span>Диван</span>
+              <span id="moveLabel">Хід 0 / 8</span>
+            </div>
+            <div class="bars">
+              <div class="bar a">Team A<strong id="countA">2</strong></div>
+              <div class="bar b">Team B<strong id="countB">2</strong></div>
+            </div>
+            <div class="steps" id="steps"></div>
+          </div>
+
+          <div class="callout" id="callout">Усі папери відкриті. Caller — той, у кого порожнє місце справа.</div>
+        </div>
+      </div>
+
+      <div class="bottom">
+        <span>Keep the turn · gather four on the couch</span>
+        <span id="clock">autoplay</span>
+      </div>
+
+      <div class="overlay show" id="overlay">
+        <div class="overlay-card">
+          <h2 id="overlayTitle">Couch of Power</h2>
+          <p id="overlayText">Як вигравати завжди, коли знаєш усі імена</p>
+        </div>
+      </div>
+    </div>
+
+    <script type="module">
+      const params = new URLSearchParams(location.search);
+      const AUTOPLAY = params.get('autoplay') !== '0';
+      const SPEED = Number(params.get('speed') || 1);
+
+      const wait = (ms) => new Promise((r) => setTimeout(r, ms / SPEED));
+
+      const seatPos = (i, n = 9) => {
+        // seat 0 at top (couch), clockwise
+        const angle = (-Math.PI / 2) + (i * 2 * Math.PI) / n;
+        const r = 38; // percent of board
+        return {
+          left: 50 + r * Math.cos(angle),
+          top: 50 + r * Math.sin(angle),
+        };
+      };
+
+      const frames = [{"type":"start","seats":[{"id":0,"name":"Alex","team":"A"},{"id":1,"name":"Blake","team":"B"},{"id":2,"name":"Casey","team":"A"},{"id":3,"name":"Drew","team":"B"},{"id":4,"name":"Eden","team":"A"},{"id":5,"name":"Frankie","team":"B"},null,{"id":6,"name":"Gray","team":"A"},{"id":7,"name":"Harper","team":"B"}],"papers":{"Alex":"Casey","Blake":"Drew","Casey":"Blake","Drew":"Alex","Eden":"Harper","Frankie":"Eden","Gray":"Frankie","Harper":"Gray"},"empty":6,"callerSeat":7,"caller":"Gray","couch":{"A":2,"B":2},"winner":null,"move":0},{"type":"move","call":"Alex","mover":"Drew","caller":"Eden","fromSeat":3,"toSeat":6,"seats":[{"id":0,"name":"Alex","team":"A"},{"id":1,"name":"Blake","team":"B"},{"id":2,"name":"Casey","team":"A"},null,{"id":4,"name":"Eden","team":"A"},{"id":5,"name":"Frankie","team":"B"},{"id":3,"name":"Drew","team":"B"},{"id":6,"name":"Gray","team":"A"},{"id":7,"name":"Harper","team":"B"}],"papers":{"Alex":"Casey","Blake":"Drew","Casey":"Blake","Drew":"Frankie","Eden":"Harper","Frankie":"Eden","Gray":"Alex","Harper":"Gray"},"empty":3,"callerSeat":4,"couch":{"A":2,"B":1},"winner":null,"move":1},{"type":"move","call":"Gray","mover":"Harper","caller":"Alex","fromSeat":8,"toSeat":3,"seats":[{"id":0,"name":"Alex","team":"A"},{"id":1,"name":"Blake","team":"B"},{"id":2,"name":"Casey","team":"A"},{"id":7,"name":"Harper","team":"B"},{"id":4,"name":"Eden","team":"A"},{"id":5,"name":"Frankie","team":"B"},{"id":3,"name":"Drew","team":"B"},{"id":6,"name":"Gray","team":"A"},null],"papers":{"Alex":"Casey","Blake":"Drew","Casey":"Blake","Drew":"Frankie","Eden":"Gray","Frankie":"Eden","Gray":"Alex","Harper":"Harper"},"empty":8,"callerSeat":0,"couch":{"A":2,"B":2},"winner":null,"move":2},{"type":"move","call":"Alex","mover":"Gray","caller":"Gray","fromSeat":7,"toSeat":8,"seats":[{"id":0,"name":"Alex","team":"A"},{"id":1,"name":"Blake","team":"B"},{"id":2,"name":"Casey","team":"A"},{"id":7,"name":"Harper","team":"B"},{"id":4,"name":"Eden","team":"A"},{"id":5,"name":"Frankie","team":"B"},{"id":3,"name":"Drew","team":"B"},null,{"id":6,"name":"Gray","team":"A"}],"papers":{"Alex":"Alex","Blake":"Drew","Casey":"Blake","Drew":"Frankie","Eden":"Gray","Frankie":"Eden","Gray":"Casey","Harper":"Harper"},"empty":7,"callerSeat":8,"couch":{"A":2,"B":2},"winner":null,"move":3},{"type":"move","call":"Drew","mover":"Blake","caller":"Casey","fromSeat":1,"toSeat":7,"seats":[{"id":0,"name":"Alex","team":"A"},null,{"id":2,"name":"Casey","team":"A"},{"id":7,"name":"Harper","team":"B"},{"id":4,"name":"Eden","team":"A"},{"id":5,"name":"Frankie","team":"B"},{"id":3,"name":"Drew","team":"B"},{"id":1,"name":"Blake","team":"B"},{"id":6,"name":"Gray","team":"A"}],"papers":{"Alex":"Alex","Blake":"Casey","Casey":"Blake","Drew":"Frankie","Eden":"Gray","Frankie":"Eden","Gray":"Drew","Harper":"Harper"},"empty":1,"callerSeat":2,"couch":{"A":2,"B":1},"winner":null,"move":4},{"type":"move","call":"Harper","mover":"Harper","caller":"Eden","fromSeat":3,"toSeat":1,"seats":[{"id":0,"name":"Alex","team":"A"},{"id":7,"name":"Harper","team":"B"},{"id":2,"name":"Casey","team":"A"},null,{"id":4,"name":"Eden","team":"A"},{"id":5,"name":"Frankie","team":"B"},{"id":3,"name":"Drew","team":"B"},{"id":1,"name":"Blake","team":"B"},{"id":6,"name":"Gray","team":"A"}],"papers":{"Alex":"Alex","Blake":"Casey","Casey":"Harper","Drew":"Frankie","Eden":"Gray","Frankie":"Eden","Gray":"Drew","Harper":"Blake"},"empty":3,"callerSeat":4,"couch":{"A":2,"B":1},"winner":null,"move":5},{"type":"move","call":"Drew","mover":"Gray","caller":"Alex","fromSeat":8,"toSeat":3,"seats":[{"id":0,"name":"Alex","team":"A"},{"id":7,"name":"Harper","team":"B"},{"id":2,"name":"Casey","team":"A"},{"id":6,"name":"Gray","team":"A"},{"id":4,"name":"Eden","team":"A"},{"id":5,"name":"Frankie","team":"B"},{"id":3,"name":"Drew","team":"B"},{"id":1,"name":"Blake","team":"B"},null],"papers":{"Alex":"Alex","Blake":"Casey","Casey":"Harper","Drew":"Frankie","Eden":"Drew","Frankie":"Eden","Gray":"Gray","Harper":"Blake"},"empty":8,"callerSeat":0,"couch":{"A":3,"B":1},"winner":null,"move":6},{"type":"move","call":"Blake","mover":"Harper","caller":"Casey","fromSeat":1,"toSeat":8,"seats":[{"id":0,"name":"Alex","team":"A"},null,{"id":2,"name":"Casey","team":"A"},{"id":6,"name":"Gray","team":"A"},{"id":4,"name":"Eden","team":"A"},{"id":5,"name":"Frankie","team":"B"},{"id":3,"name":"Drew","team":"B"},{"id":1,"name":"Blake","team":"B"},{"id":7,"name":"Harper","team":"B"}],"papers":{"Alex":"Blake","Blake":"Casey","Casey":"Harper","Drew":"Frankie","Eden":"Drew","Frankie":"Eden","Gray":"Gray","Harper":"Alex"},"empty":1,"callerSeat":2,"couch":{"A":3,"B":0},"winner":null,"move":7},{"type":"move","call":"Drew","mover":"Eden","caller":"Frankie","fromSeat":4,"toSeat":1,"seats":[{"id":0,"name":"Alex","team":"A"},{"id":4,"name":"Eden","team":"A"},{"id":2,"name":"Casey","team":"A"},{"id":6,"name":"Gray","team":"A"},null,{"id":5,"name":"Frankie","team":"B"},{"id":3,"name":"Drew","team":"B"},{"id":1,"name":"Blake","team":"B"},{"id":7,"name":"Harper","team":"B"}],"papers":{"Alex":"Blake","Blake":"Casey","Casey":"Drew","Drew":"Frankie","Eden":"Harper","Frankie":"Eden","Gray":"Gray","Harper":"Alex"},"empty":4,"callerSeat":5,"couch":{"A":4,"B":0},"winner":"A","move":8}];
+
+      const board = document.getElementById('board');
+      const ghost = document.getElementById('ghost');
+      const stepsEl = document.getElementById('steps');
+      const stage = document.getElementById('stage');
+
+      for (let i = 0; i < 8; i++) {
+        const d = document.createElement('div');
+        d.className = 'step-dot';
+        d.dataset.i = String(i);
+        stepsEl.appendChild(d);
+      }
+
+      /** @type {Map<string, HTMLElement>} */
+      const personEls = new Map();
+      let emptyEl = null;
+
+      function ensurePeople(frame) {
+        for (const seat of frame.seats) {
+          if (!seat) continue;
+          if (personEls.has(seat.name)) continue;
+          const el = document.createElement('div');
+          el.className = `seat person team-${seat.team}`;
+          el.dataset.name = seat.name;
+          el.innerHTML = `<span class="name">${seat.name}</span><span class="paper-chip"></span>`;
+          board.parentElement.appendChild(el);
+          personEls.set(seat.name, el);
+        }
+        if (!emptyEl) {
+          emptyEl = document.createElement('div');
+          emptyEl.className = 'seat empty-slot';
+          emptyEl.textContent = 'empty';
+          board.parentElement.appendChild(emptyEl);
+        }
+      }
+
+      function place(frame, { highlightCaller = true, highlightMover = null } = {}) {
+        ensurePeople(frame);
+        const occupied = new Set();
+        frame.seats.forEach((seat, idx) => {
+          if (!seat) return;
+          occupied.add(seat.name);
+          const el = personEls.get(seat.name);
+          const pos = seatPos(idx);
+          el.style.left = `${pos.left}%`;
+          el.style.top = `${pos.top}%`;
+          el.classList.toggle('caller', highlightCaller && idx === frame.callerSeat);
+          el.classList.toggle('mover', highlightMover === seat.name);
+          const chip = el.querySelector('.paper-chip');
+          chip.textContent = frame.papers[seat.name] ?? '';
+        });
+        const epos = seatPos(frame.empty);
+        emptyEl.style.left = `${epos.left}%`;
+        emptyEl.style.top = `${epos.top}%`;
+        for (const [name, el] of personEls) {
+          el.style.opacity = occupied.has(name) ? '1' : '0';
+        }
+        document.getElementById('countA').textContent = String(frame.couch.A);
+        document.getElementById('countB').textContent = String(frame.couch.B);
+        document.getElementById('moveLabel').textContent = `Хід ${frame.move} / 8`;
+      }
+
+      function setCopy({ eyebrow, headline, sub, callout, badge }) {
+        if (eyebrow != null) document.getElementById('eyebrow').textContent = eyebrow;
+        if (headline != null) document.getElementById('headline').textContent = headline;
+        if (sub != null) document.getElementById('sub').textContent = sub;
+        if (callout != null) document.getElementById('callout').textContent = callout;
+        if (badge != null) document.getElementById('badge').textContent = badge;
+      }
+
+      function setSteps(move) {
+        [...stepsEl.children].forEach((el, i) => {
+          el.classList.toggle('on', i === move - 1);
+          el.classList.toggle('done', i < move - 1 || (move === 8 && i === 7));
+        });
+      }
+
+      async function animateMove(prev, next) {
+        const from = seatPos(next.fromSeat);
+        const to = seatPos(next.toSeat);
+        const moverEl = personEls.get(next.mover);
+        ghost.className = `ghost visible team-${moverEl.classList.contains('team-A') ? 'A' : 'B'}`;
+        ghost.style.background = getComputedStyle(moverEl).background;
+        ghost.textContent = next.mover;
+        ghost.style.left = `${from.left}%`;
+        ghost.style.top = `${from.top}%`;
+        moverEl.style.opacity = '0.15';
+        emptyEl.style.opacity = '0.35';
+
+        await wait(40);
+        ghost.style.transition = 'left 0.85s cubic-bezier(0.22, 1, 0.36, 1), top 0.85s cubic-bezier(0.22, 1, 0.36, 1)';
+        ghost.style.left = `${to.left}%`;
+        ghost.style.top = `${to.top}%`;
+        await wait(880);
+        ghost.classList.remove('visible');
+        ghost.style.transition = '';
+        place(next, { highlightCaller: true, highlightMover: next.mover });
+        emptyEl.style.opacity = '1';
+      }
+
+      async function showOverlay(title, text, ms) {
+        const overlay = document.getElementById('overlay');
+        document.getElementById('overlayTitle').textContent = title;
+        document.getElementById('overlayText').textContent = text;
+        overlay.classList.add('show');
+        await wait(ms);
+        overlay.classList.remove('show');
+        await wait(400);
+      }
+
+      async function run() {
+        const start = frames[0];
+        place(start);
+        setSteps(0);
+
+        await showOverlay(
+          'Couch of Power',
+          'Як вигравати завжди, коли знаєш усі імена',
+          2800,
+        );
+
+        stage.classList.add('show-papers');
+        setCopy({
+          eyebrow: 'Умова',
+          headline: 'Усі папери відомі',
+          sub: 'Офіційний старт: диван 2–2, порожнє місце навпроти. Перший caller — команда A.',
+          callout: 'Знаєш хто тримає яке ім’я → бачиш кожен keep-хід наперед.',
+          badge: 'Perfect information',
+        });
+        place(start);
+        await wait(3200);
+
+        setCopy({
+          eyebrow: 'Теорема столу',
+          headline: 'Форс за 8 ходів',
+          sub: 'A ніколи не віддає хід. Кожен клік лишає наступного caller у команді A і збирає диван.',
+          callout: 'Фініш завжди виглядає як AAAA.BBBB — четверо своїх на дивані.',
+        });
+        await wait(3000);
+
+        let prev = start;
+        for (let i = 1; i < frames.length; i++) {
+          const next = frames[i];
+          setSteps(next.move);
+          setCopy({
+            eyebrow: `Хід ${next.move} з 8`,
+            headline: `${next.caller} кличе «${next.call}»`,
+            sub: `${next.mover} сідає в empty. Папери міняються. Хід лишається в A.`,
+            callout:
+              next.move < 8
+                ? `Диван ${next.couch.A}–${next.couch.B}. Keep-turn збережено.`
+                : 'Четвертий A сідає на диван — партія закінчена.',
+            badge: next.move === 8 ? 'Forced win' : 'Keep the turn',
+          });
+
+          // highlight called paper holder before move
+          place(prev, { highlightCaller: true, highlightMover: next.mover });
+          await wait(900);
+          await animateMove(prev, next);
+          prev = next;
+          await wait(next.move === 8 ? 600 : 1100);
+        }
+
+        stage.classList.add('win-burst');
+        setSteps(8);
+        setCopy({
+          eyebrow: 'Матовий фініш',
+          headline: 'A завжди може виграти',
+          sub: 'З повною картою імен перша команда форсує перемогу. Помилка = віддати хід, і тоді вже B може покарати.',
+          callout: 'Стратегія: keep-turn + прогрес дивану. Без карти імен — спочатку збирай знання шепотом.',
+          badge: 'AAAA on the couch',
+        });
+        await wait(2200);
+        await showOverlay('Перемога команди A', '8 keep-ходів. Хід жодного разу не віддано.', 3500);
+        document.getElementById('clock').textContent = 'done';
+        document.body.dataset.done = '1';
+      }
+
+      if (AUTOPLAY) run();
+      else {
+        document.getElementById('overlay').classList.remove('show');
+        place(frames[0]);
+        stage.classList.add('show-papers');
+      }
+    </script>
+  </body>
+</html>

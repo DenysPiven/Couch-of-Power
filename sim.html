@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Симуляції — Четверо на дивані</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Figtree:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/src/styles/main.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <h1 class="brand">Четверо на <span>дивані</span></h1>
+      <nav class="nav" aria-label="Навігація">
+        <a href="./index.html">Гра</a>
+        <a href="./sim.html" aria-current="page">Симуляції</a>
+      </nav>
+    </header>
+
+    <main>
+      <p class="lead">
+        Окрема панель статистики: прогін партій зі стратегіями random / greedy /
+        keep-turn / adversarial. Не змішується з ручною грою.
+      </p>
+
+      <section class="panel">
+        <form class="sim-form" id="sim-form">
+          <label>
+            Стратегія команди A
+            <select name="strategyA" id="strategy-a">
+              <option value="random">random</option>
+              <option value="greedy" selected>greedy</option>
+              <option value="keep-turn">keep-turn</option>
+              <option value="adversarial-A">adversarial (A)</option>
+              <option value="coop-A">coop / greedy для A</option>
+            </select>
+          </label>
+          <label>
+            Стратегія команди B
+            <select name="strategyB" id="strategy-b">
+              <option value="random" selected>random</option>
+              <option value="greedy">greedy</option>
+              <option value="keep-turn">keep-turn</option>
+              <option value="adversarial-B">adversarial (B)</option>
+            </select>
+          </label>
+          <label>
+            Кількість партій
+            <input type="number" name="games" id="games" min="1" max="5000" value="200" />
+          </label>
+          <label>
+            Макс. ходів на партію
+            <input type="number" name="maxMoves" id="max-moves" min="4" max="500" value="80" />
+          </label>
+          <label>
+            Сід (опційно)
+            <input type="number" name="seed" id="seed" placeholder="випадково" />
+          </label>
+          <div class="checks" style="align-self: end">
+            <label>
+              <input type="checkbox" id="sim-own" checked />
+              no-own-paper
+            </label>
+            <label>
+              <input type="checkbox" id="sim-repeat" checked />
+              no-repeat
+            </label>
+          </div>
+          <div class="sim-actions">
+            <button type="submit" class="primary" id="btn-run">Запустити</button>
+            <button type="button" id="btn-stop" disabled>Зупинити</button>
+            <span class="hint" id="sim-status">Готово до прогону.</span>
+          </div>
+        </form>
+        <div class="progress" aria-hidden="true"><span id="sim-progress"></span></div>
+      </section>
+
+      <section class="panel" style="margin-top: 1.25rem" aria-live="polite">
+        <h2 style="font-family: var(--font-display); margin: 0 0 0.25rem; font-size: 1.25rem">
+          Результати
+        </h2>
+        <p class="hint" id="result-summary">Ще немає даних.</p>
+        <div class="stats-grid">
+          <div class="stat">
+            <div class="label">Перемоги A</div>
+            <div class="value" id="stat-a">0</div>
+          </div>
+          <div class="stat">
+            <div class="label">Перемоги B</div>
+            <div class="value" id="stat-b">0</div>
+          </div>
+          <div class="stat">
+            <div class="label">Без переможця</div>
+            <div class="value" id="stat-draw">0</div>
+          </div>
+          <div class="stat">
+            <div class="label">Сер. ходів (перемоги)</div>
+            <div class="value" id="stat-avg">—</div>
+          </div>
+          <div class="stat">
+            <div class="label">Мін / макс ходів</div>
+            <div class="value" id="stat-range">—</div>
+          </div>
+        </div>
+        <div class="bar-chart" id="bar-chart">
+          <div class="bar-row">
+            <span>Команда A</span>
+            <div class="bar-track"><div class="bar-fill A" id="bar-a"></div></div>
+            <span id="pct-a">0%</span>
+          </div>
+          <div class="bar-row">
+            <span>Команда B</span>
+            <div class="bar-track"><div class="bar-fill B" id="bar-b"></div></div>
+            <span id="pct-b">0%</span>
+          </div>
+          <div class="bar-row">
+            <span>Нічия / ліміт</span>
+            <div class="bar-track"><div class="bar-fill draw" id="bar-draw"></div></div>
+            <span id="pct-draw">0%</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" style="margin-top: 1.25rem">
+        <h2 style="font-family: var(--font-display); margin: 0 0 0.5rem; font-size: 1.1rem">
+          Відомі орієнтири
+        </h2>
+        <ul class="hint" style="margin: 0; padding-left: 1.1rem">
+          <li>1 хід → перемога неможлива зі старту 2+2.</li>
+          <li>Coop з відомими папірцями: типовий шлях на 4 ходи (третій — «віддати»).</li>
+          <li>Обидві ідеально: перша команда форсить ≤6 (мінimax).</li>
+          <li>Keep-turn без no-repeat: можливі партії рівно на 12 ходів.</li>
+        </ul>
+      </section>
+    </main>
+
+    <footer class="site-foot">Статистика рахується в браузері, без бекенду.</footer>
+    <script type="module" src="/src/sim-main.js"></script>
+  </body>
+</html>

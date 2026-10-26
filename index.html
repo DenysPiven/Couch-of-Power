@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Четверо на дивані</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Figtree:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/src/styles/main.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <h1 class="brand">Четверо на <span>дивані</span></h1>
+      <nav class="nav" aria-label="Навігація">
+        <a href="./index.html" aria-current="page">Гра</a>
+        <a href="./sim.html">Симуляції</a>
+      </nav>
+    </header>
+
+    <main>
+      <p class="lead">
+        8 гравців, 9 стільців по колу. Хто зліва від порожнього — кличе ім’я.
+        Хто тримає цей папірець — сідає на порожнє і міняється папірцями з
+        викликачем. Мета команди: усі четверо на дивані.
+      </p>
+
+      <div class="layout-game">
+        <section class="panel board-wrap" aria-label="Ігрове поле">
+          <div class="board" id="board">
+            <div class="couch-arc" aria-hidden="true"></div>
+          </div>
+        </section>
+
+        <aside class="side">
+          <div class="scores" aria-live="polite">
+            <div class="score-card A">
+              <h2>Команда A</h2>
+              <div class="count" id="score-a">2</div>
+              <div>на дивані</div>
+            </div>
+            <div class="score-card B">
+              <h2>Команда B</h2>
+              <div class="count" id="score-b">2</div>
+              <div>на дивані</div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="meta">
+              <span>Хід: <strong id="move-count">0</strong></span>
+              <span>Кличе: <strong id="caller-name">—</strong></span>
+              <span>Команда: <strong id="caller-team">—</strong></span>
+            </div>
+            <div id="win-banner" class="win-banner" role="status"></div>
+          </div>
+
+          <div class="panel controls">
+            <h2>Кличіть ім’я</h2>
+            <p class="hint" id="call-hint">Оберіть ім’я з папірця когось іншого.</p>
+            <div class="call-grid" id="call-grid"></div>
+            <div class="toolbar">
+              <button type="button" id="btn-toggle-papers">Показати папірці</button>
+              <button type="button" id="btn-undo" disabled>Скасувати</button>
+              <button type="button" class="primary" id="btn-new">Нова гра</button>
+            </div>
+            <div class="checks">
+              <label>
+                <input type="checkbox" id="rule-own" checked />
+                Не кликати своє ім’я з папірця
+              </label>
+              <label>
+                <input type="checkbox" id="rule-repeat" checked />
+                Не кликати те саме двічі підряд
+              </label>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h2 style="font-family: var(--font-display); font-size: 1.05rem; margin: 0 0 0.5rem">
+              Журнал
+            </h2>
+            <ol class="log" id="log"></ol>
+          </div>
+
+          <details class="panel">
+            <summary style="font-weight: 700; cursor: pointer">Імена гравців</summary>
+            <div class="setup-row" id="names-form" style="margin-top: 0.75rem"></div>
+            <p class="hint">Зміни застосуються після «Нова гра».</p>
+          </details>
+        </aside>
+      </div>
+    </main>
+
+    <footer class="site-foot">
+      Диван — стільці 1–4 зверху кола. Порожнє на старті — середній стілець.
+    </footer>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

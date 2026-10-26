@@ -123,8 +123,9 @@ export function describeLayout(layout) {
     else if (t === 'B') b++;
   }
   const emptyOnCouch = COUCH.includes(empty);
-  const callerSeat = (empty - 1 + SEAT_COUNT) % SEAT_COUNT;
-  const callerTeam = /** @type {'A'|'B'} */ (layout[callerSeat]);
+  // Same rule as engine.callerSeat: empty is on the caller's right → seat empty+1.
+  const callerSeatIdx = (empty + 1) % SEAT_COUNT;
+  const callerTeam = /** @type {'A'|'B'} */ (layout[callerSeatIdx]);
   const emptyZone = emptyOnCouch
     ? 'couch'
     : empty === 4

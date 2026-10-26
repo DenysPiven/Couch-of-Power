@@ -8,7 +8,7 @@ Browser game and simulations for the party game **Four on the Couch** (Couch of 
 
 - 8 people, 2 teams of 4, 9 seats in a circle; seats 1–4 are the **couch**, one seat is empty.
 - Everyone holds a secret paper with a name.
-- Whoever sits **left** of the empty seat calls a name; whoever holds that paper sits in the empty seat and **swaps papers** with the caller.
+- Whoever has the empty seat on their **right** calls a name; whoever holds that paper sits in the empty seat and **swaps papers** with the caller.
 - Goal: get all 4 teammates on the couch.
 - Start: teams alternate around the circle, couch is 2+2, empty seat is the middle chair.
 - Official rules: do not call the name on your own paper; do not call the same name twice in a row.

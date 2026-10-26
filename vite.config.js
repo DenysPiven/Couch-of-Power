@@ -9,6 +9,7 @@ export default defineConfig({
       input: {
         main: resolve(__dirname, 'index.html'),
         sim: resolve(__dirname, 'sim.html'),
+        stats: resolve(__dirname, 'stats.html'),
       },
     },
   },

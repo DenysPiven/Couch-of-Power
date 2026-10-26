@@ -19,17 +19,20 @@
       <nav class="nav" aria-label="Navigation">
         <a href="./index.html">Game</a>
         <a href="./sim.html" aria-current="page">Simulations</a>
+        <a href="./stats.html">Stats</a>
       </nav>
     </header>
 
     <main>
       <p class="lead">
         Seat people and the empty chair in every distinct way (mirrors removed),
-        then measure who wins more often in each situation. Papers are reshuffled
-        per game.
+        then measure who wins more often in each situation. Finished runs are saved
+        under Stats.
       </p>
 
-      <section class="panel" aria-label="Seating census">
+      <div id="rules-mount"></div>
+
+      <section class="panel" style="margin-top: 1.25rem" aria-label="Seating census">
         <h2 class="panel-title">Seating census</h2>
         <p class="hint" id="census-summary">Counting…</p>
         <div class="stats-grid" id="census-grid">

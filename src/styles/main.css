@@ -1,6 +1,8 @@
 :root {
   --bg: #dfe8e3;
   --bg-deep: #c5d4cc;
+  --bg-glow-a: #f3ebe2;
+  --bg-glow-b: #cfe0d8;
   --ink: #1a2420;
   --ink-muted: #4a5c54;
   --surface: rgba(255, 252, 248, 0.82);
@@ -12,13 +14,67 @@
   --team-b-soft: #f7e0d8;
   --couch: #3d2b1f;
   --couch-soft: #e8d5c4;
+  --couch-seat-a: #fff8f0;
+  --couch-seat-b: #f0e0d0;
+  --couch-seat-line: rgba(61, 43, 31, 0.35);
+  --board-a: #f7f1ea;
+  --board-b: #e4ddd3;
+  --board-c: #d2c8bb;
+  --board-shine: rgba(255, 255, 255, 0.18);
+  --paper: #fff;
+  --paper-known: #eef6f4;
   --empty: #7a8f86;
   --accent: #1f4b5e;
+  --accent-strong: #163849;
+  --accent-soft: rgba(31, 75, 94, 0.18);
   --danger: #8b1e1e;
+  --on-accent: #f7faf9;
+  --win-a: #f3fff9;
+  --win-b: #fff6f2;
+  --track: rgba(26, 36, 32, 0.08);
   --radius: 14px;
   --font-display: 'Bricolage Grotesque', system-ui, sans-serif;
   --font-body: 'Figtree', system-ui, sans-serif;
   --shadow: 0 18px 50px rgba(26, 36, 32, 0.12);
+  color-scheme: light;
+}
+
+html[data-theme='dark'] {
+  --bg: #121a17;
+  --bg-deep: #0b100e;
+  --bg-glow-a: #1c2a24;
+  --bg-glow-b: #152028;
+  --ink: #e7efea;
+  --ink-muted: #9bb0a6;
+  --surface: rgba(24, 34, 30, 0.88);
+  --surface-solid: #1a2420;
+  --line: rgba(231, 239, 234, 0.12);
+  --team-a: #3dba8a;
+  --team-a-soft: #16352a;
+  --team-b: #e07a5f;
+  --team-b-soft: #3a221c;
+  --couch: #c4a484;
+  --couch-soft: #3a2c22;
+  --couch-seat-a: #2a221c;
+  --couch-seat-b: #231c17;
+  --couch-seat-line: rgba(196, 164, 132, 0.4);
+  --board-a: #24302a;
+  --board-b: #1c2621;
+  --board-c: #151c19;
+  --board-shine: rgba(255, 255, 255, 0.04);
+  --paper: #24302b;
+  --paper-known: #1e3a32;
+  --empty: #7f958a;
+  --accent: #6eb6d4;
+  --accent-strong: #4f9bb8;
+  --accent-soft: rgba(110, 182, 212, 0.22);
+  --danger: #f07178;
+  --on-accent: #0b1210;
+  --win-a: #0f241c;
+  --win-b: #2a1612;
+  --track: rgba(231, 239, 234, 0.1);
+  --shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+  color-scheme: dark;
 }
 
 *,
@@ -37,11 +93,12 @@ body {
   font-family: var(--font-body);
   color: var(--ink);
   background:
-    radial-gradient(ellipse 80% 50% at 10% -10%, #f3ebe2 0%, transparent 55%),
-    radial-gradient(ellipse 60% 40% at 100% 0%, #cfe0d8 0%, transparent 50%),
+    radial-gradient(ellipse 80% 50% at 10% -10%, var(--bg-glow-a) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 40% at 100% 0%, var(--bg-glow-b) 0%, transparent 50%),
     linear-gradient(165deg, var(--bg) 0%, var(--bg-deep) 100%);
   background-attachment: fixed;
   line-height: 1.45;
+  transition: background 0.25s ease, color 0.2s ease;
 }
 
 a {
@@ -142,10 +199,10 @@ main {
   background:
     repeating-conic-gradient(
         from 0deg,
-        rgba(255, 255, 255, 0.18) 0deg 8deg,
+        var(--board-shine) 0deg 8deg,
         transparent 8deg 16deg
       ),
-    radial-gradient(circle at 50% 50%, #f7f1ea 0%, #e4ddd3 62%, #d2c8bb 100%);
+    radial-gradient(circle at 50% 50%, var(--board-a) 0%, var(--board-b) 62%, var(--board-c) 100%);
   border: 1px solid var(--line);
   box-shadow: var(--shadow);
 }
@@ -185,8 +242,8 @@ main {
 }
 
 .seat.is-couch {
-  border-color: rgba(61, 43, 31, 0.35);
-  background: linear-gradient(180deg, #fff8f0, #f0e0d0);
+  border-color: var(--couch-seat-line);
+  background: linear-gradient(180deg, var(--couch-seat-a), var(--couch-seat-b));
 }
 
 .seat.is-empty {
@@ -201,8 +258,8 @@ main {
   z-index: 2;
   border-color: var(--accent);
   box-shadow:
-    0 0 0 3px rgba(31, 75, 94, 0.18),
-    0 10px 24px rgba(26, 36, 32, 0.14);
+    0 0 0 3px var(--accent-soft),
+    0 10px 24px var(--shadow);
   animation: pulse-caller 1.6s ease-in-out infinite;
 }
 
@@ -234,7 +291,7 @@ main {
   margin-top: 0.35rem;
   padding: 0.2rem 0.3rem;
   border-radius: 6px;
-  background: #fff;
+  background: var(--paper);
   border: 1px dashed var(--line);
   font-size: 0.7rem;
   color: var(--ink-muted);
@@ -249,14 +306,14 @@ main {
 .seat-paper.is-known {
   filter: none;
   border-style: solid;
-  border-color: rgba(31, 75, 94, 0.35);
+  border-color: var(--accent);
   color: var(--ink);
   font-weight: 600;
-  background: #eef6f4;
+  background: var(--paper-known);
 }
 
 button.is-revealed {
-  box-shadow: inset 0 -3px 0 rgba(31, 75, 94, 0.35);
+  box-shadow: inset 0 -3px 0 var(--accent);
 }
 
 @keyframes pulse-caller {
@@ -372,8 +429,8 @@ button,
 
 button:hover:not(:disabled),
 .btn:hover {
-  background: #fff;
-  border-color: rgba(26, 36, 32, 0.28);
+  background: var(--paper);
+  border-color: var(--accent);
 }
 
 button:active:not(:disabled) {
@@ -387,12 +444,12 @@ button:disabled {
 
 button.primary {
   background: var(--accent);
-  color: #f7faf9;
+  color: var(--on-accent);
   border-color: transparent;
 }
 
 button.primary:hover:not(:disabled) {
-  background: #163849;
+  background: var(--accent-strong);
 }
 
 button.call-A {
@@ -425,12 +482,12 @@ button.call-B {
 
 .win-banner.A {
   background: var(--team-a);
-  color: #f3fff9;
+  color: var(--win-a);
 }
 
 .win-banner.B {
   background: var(--team-b);
-  color: #fff6f2;
+  color: var(--win-b);
 }
 
 @keyframes pop-in {
@@ -478,7 +535,7 @@ button.call-B {
   padding: 0.45rem 0.55rem;
   border-radius: 8px;
   border: 1px solid var(--line);
-  background: #fff;
+  background: var(--paper);
   color: var(--ink);
 }
 
@@ -522,7 +579,7 @@ button.call-B {
   height: 1.45rem;
   margin-top: 0.15rem;
   border-radius: 999px;
-  background: rgba(26, 36, 32, 0.18);
+  background: var(--track);
   transition: background 0.2s ease;
 }
 
@@ -534,8 +591,8 @@ button.call-B {
   width: 1.15rem;
   height: 1.15rem;
   border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 1px 4px rgba(26, 36, 32, 0.25);
+  background: var(--paper);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
   transition: transform 0.2s ease;
 }
 
@@ -593,7 +650,8 @@ button.call-B {
   padding: 0.5rem 0.6rem;
   border-radius: 8px;
   border: 1px solid var(--line);
-  background: #fff;
+  background: var(--paper);
+  color: var(--ink);
 }
 
 .sim-actions {
@@ -650,7 +708,7 @@ button.call-B {
 .bar-track {
   height: 12px;
   border-radius: 999px;
-  background: rgba(26, 36, 32, 0.08);
+  background: var(--track);
   overflow: hidden;
 }
 
@@ -676,7 +734,7 @@ button.call-B {
 .progress {
   height: 6px;
   border-radius: 999px;
-  background: rgba(26, 36, 32, 0.08);
+  background: var(--track);
   overflow: hidden;
   margin-top: 0.75rem;
 }
@@ -728,7 +786,7 @@ button.call-B {
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--ink-muted);
-  background: rgba(26, 36, 32, 0.04);
+  background: var(--track);
   position: sticky;
   top: 0;
 }
@@ -767,7 +825,36 @@ button.call-B {
 
 .run-card.is-active {
   border-color: var(--accent);
-  box-shadow: 0 0 0 2px rgba(31, 75, 94, 0.15);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+.app-header .nav {
+  align-items: center;
+}
+
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0.35rem 0.65rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-solid);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.theme-toggle:hover {
+  border-color: var(--accent);
+}
+
+.theme-toggle-icon {
+  font-size: 1rem;
+  line-height: 1;
 }
 
 .run-card-main {

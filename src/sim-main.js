@@ -7,6 +7,7 @@ import {
 import { estimatedRawLayouts, MAX_RAW_LAYOUTS, rulesLabel } from './game/rules.js';
 import { playGame, strategyById } from './game/strategies.js';
 import { loadRules, saveSimRun } from './storage.js';
+import './theme.js';
 import { bindRulesForm, rulesPanelHtml } from './ui/rules-form.js';
 
 document.getElementById('rules-mount').innerHTML = rulesPanelHtml();

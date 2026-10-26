@@ -19,14 +19,14 @@ export const COUCH = Object.freeze([0, 1, 2, 3]);
 export const EMPTY_START = 4;
 
 const DEFAULT_NAMES = [
-  'Оля',
-  'Макс',
-  'Іра',
-  'Саша',
-  'Катя',
-  'Діма',
-  'Настя',
-  'Влад',
+  'Alex',
+  'Blake',
+  'Casey',
+  'Drew',
+  'Eden',
+  'Frankie',
+  'Gray',
+  'Harper',
 ];
 
 /**
@@ -35,7 +35,7 @@ const DEFAULT_NAMES = [
  */
 export function createInitialState(opts = {}) {
   const names = opts.names ?? DEFAULT_NAMES;
-  if (names.length !== 8) throw new Error('Потрібно рівно 8 імен');
+  if (names.length !== 8) throw new Error('Exactly 8 names required');
 
   const players = names.map((name, id) => ({
     id,
@@ -73,7 +73,7 @@ export function createInitialState(opts = {}) {
 /** Left of empty = previous index (counterclockwise if seats increase clockwise). */
 export function callerSeat(seats) {
   const empty = seats.indexOf(null);
-  if (empty < 0) throw new Error('Немає порожнього місця');
+  if (empty < 0) throw new Error('No empty seat');
   return (empty - 1 + SEAT_COUNT) % SEAT_COUNT;
 }
 
@@ -84,7 +84,7 @@ export function emptySeat(seats) {
 export function callerId(state) {
   const seat = callerSeat(state.seats);
   const id = state.seats[seat];
-  if (id == null) throw new Error('Зліва від порожнього нікого немає');
+  if (id == null) throw new Error('No one sits left of the empty seat');
   return id;
 }
 
@@ -133,10 +133,10 @@ export function legalCalls(state) {
  * @returns {GameState}
  */
 export function applyCall(state, nameOwnerId) {
-  if (state.winner) throw new Error('Гра вже закінчена');
+  if (state.winner) throw new Error('Game already over');
   const legal = legalCalls(state);
   if (!legal.includes(nameOwnerId)) {
-    throw new Error('Недозволений клич');
+    throw new Error('Illegal call');
   }
 
   const caller = callerId(state);
@@ -150,10 +150,10 @@ export function applyCall(state, nameOwnerId) {
       break;
     }
   }
-  if (moverSeat < 0) throw new Error('Не знайдено власника папірця');
+  if (moverSeat < 0) throw new Error('Paper holder not found');
 
   const mover = state.seats[moverSeat];
-  if (mover == null) throw new Error('Порожній стілець як рушій');
+  if (mover == null) throw new Error('Empty seat marked as mover');
 
   const seats = [...state.seats];
   seats[empty] = mover;

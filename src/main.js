@@ -33,7 +33,7 @@ function buildNamesForm() {
   namesForm.innerHTML = '';
   DEFAULT_NAMES.forEach((name, i) => {
     const label = document.createElement('label');
-    label.textContent = `Гравець ${i + 1} (${i % 2 === 0 ? 'A' : 'B'})`;
+    label.textContent = `Player ${i + 1} (${i % 2 === 0 ? 'A' : 'B'})`;
     const input = document.createElement('input');
     input.value = name;
     input.dataset.nameIdx = String(i);
@@ -106,7 +106,7 @@ function render() {
     el.classList.remove('team-A', 'team-B');
 
     if (pid == null) {
-      el.innerHTML = `<span class="seat-label">Стілець ${i + 1}</span><span class="seat-name">порожнє</span>`;
+      el.innerHTML = `<span class="seat-label">Seat ${i + 1}</span><span class="seat-name">empty</span>`;
       continue;
     }
 
@@ -114,17 +114,17 @@ function render() {
     el.classList.add(`team-${player.team}`);
     const paperText = nameOnPaper(state, pid);
     el.innerHTML = `
-      <span class="seat-label">${COUCH.includes(i) ? 'диван' : `стілець ${i + 1}`} · ${player.team}</span>
+      <span class="seat-label">${COUCH.includes(i) ? 'couch' : `seat ${i + 1}`} · ${player.team}</span>
       <span class="seat-name">${player.name}</span>
-      <div class="seat-paper ${showPapers ? '' : 'is-hidden'}" title="Папірець">${paperText}</div>
+      <div class="seat-paper ${showPapers ? '' : 'is-hidden'}" title="Paper">${paperText}</div>
     `;
   }
 
   const legal = legalCalls(state);
   callGrid.innerHTML = '';
   document.getElementById('call-hint').textContent = state.winner
-    ? 'Гра завершена — почніть нову.'
-    : `Легальних кличів: ${legal.length}. Кличе ${state.players[cId].name}.`;
+    ? 'Game over — start a new one.'
+    : `Legal calls: ${legal.length}. Caller: ${state.players[cId].name}.`;
 
   for (const p of state.players) {
     const btn = document.createElement('button');
@@ -138,7 +138,7 @@ function render() {
 
   if (state.winner) {
     winBanner.className = `win-banner show ${state.winner}`;
-    winBanner.textContent = `Перемогла команда ${state.winner} за ${state.moveCount} ходів!`;
+    winBanner.textContent = `Team ${state.winner} wins in ${state.moveCount} moves!`;
   } else {
     winBanner.className = 'win-banner';
     winBanner.textContent = '';
@@ -146,8 +146,8 @@ function render() {
 
   document.getElementById('btn-undo').disabled = history.length === 0;
   document.getElementById('btn-toggle-papers').textContent = showPapers
-    ? 'Сховати папірці'
-    : 'Показати папірці';
+    ? 'Hide papers'
+    : 'Show papers';
 }
 
 function doCall(nameOwnerId) {
@@ -157,8 +157,8 @@ function doCall(nameOwnerId) {
   const called = state.players[nameOwnerId];
   state = applyCall(state, nameOwnerId);
   const li = document.createElement('li');
-  li.textContent = `${state.moveCount}. ${caller.name} → «${called.name}»${
-    state.winner ? ` · перемога ${state.winner}` : ''
+  li.textContent = `${state.moveCount}. ${caller.name} → “${called.name}”${
+    state.winner ? ` · win ${state.winner}` : ''
   }`;
   logEl.prepend(li);
   render();

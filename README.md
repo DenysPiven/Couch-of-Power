@@ -1,26 +1,26 @@
-# Четверо на дивані / Four on the Couch
+# Four on the Couch
 
-Браузерна гра та симуляції для партійної гри «Четверо на дивані» (Couch of power).
+Browser game and simulations for the party game **Four on the Couch** (Couch of power).
 
-**Сайт (GitHub Pages):** https://denyspiven.github.io/Four-on-the-Couch/
+**Site (GitHub Pages):** https://denyspiven.github.io/Four-on-the-Couch/
 
-## Правила (коротко)
+## Rules (short)
 
-- 8 людей, 2 команди по 4, 9 місць по колу; стільці 1–4 — **диван**, одне місце порожнє.
-- У кожного секретний папірець з ім’ям.
-- Хто **зліва** від порожнього — кличе ім’я; хто тримає цей папірець — сідає на порожнє і **міняється папірцями** з викликачем.
-- Мета: усі 4 своїх на дивані.
-- Старт: команди через одного, на дивані 2+2, порожнє на середньому стільці.
-- Офіційно: не кликати ім’я зі свого папірця; не кликати те саме ім’я двічі підряд.
+- 8 people, 2 teams of 4, 9 seats in a circle; seats 1–4 are the **couch**, one seat is empty.
+- Everyone holds a secret paper with a name.
+- Whoever sits **left** of the empty seat calls a name; whoever holds that paper sits in the empty seat and **swaps papers** with the caller.
+- Goal: get all 4 teammates on the couch.
+- Start: teams alternate around the circle, couch is 2+2, empty seat is the middle chair.
+- Official rules: do not call the name on your own paper; do not call the same name twice in a row.
 
-## Сторінки
+## Pages
 
-| Сторінка | Що робить |
-|----------|-----------|
-| [Гра](./index.html) | Ручна партія: коло, диван, папірці, ходи, перемога |
-| [Симуляції](./sim.html) | Статистика перемог: random / greedy / keep-turn / adversarial |
+| Page | What it does |
+|------|----------------|
+| [Game](./index.html) | Manual play: circle, couch, papers, moves, win |
+| [Simulations](./sim.html) | Win stats: random / greedy / keep-turn / adversarial |
 
-## Розробка
+## Development
 
 ```bash
 npm install
@@ -29,10 +29,10 @@ npm test
 npm run build
 ```
 
-Статичний білд у `dist/`. Деплой на Pages — workflow `.github/workflows/pages.yml` (після merge в `master` увімкніть Pages: Source = **GitHub Actions**).
+Static build output is in `dist/`. Deploy to Pages via `.github/workflows/pages.yml` (after push to `master`, enable Pages: Source = **GitHub Actions**).
 
-## Технічні нотатки
+## Notes
 
-- Статичний Vite-сайт, без бекенду.
-- Інтерфейс українською.
-- Ядро логіки: `src/game/engine.js`; стратегії: `src/game/strategies.js`.
+- Static Vite site, no backend.
+- UI and docs in English.
+- Core logic: `src/game/engine.js`; strategies: `src/game/strategies.js`.

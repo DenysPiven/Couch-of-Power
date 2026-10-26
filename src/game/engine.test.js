@@ -3,13 +3,26 @@ import assert from 'node:assert/strict';
 import {
   applyCall,
   callerId,
+  callerSeat,
   couchCounts,
   createInitialState,
   EMPTY_START,
+  emptySeat,
   legalCalls,
   COUCH,
+  SEAT_COUNT,
 } from './engine.js';
 import { keepTurnStrategy, playGame, randomStrategy } from './strategies.js';
+
+describe('callerSeat', () => {
+  it('is the seat that has empty on its right (counterclockwise neighbor)', () => {
+    const s = createInitialState({ seed: 1 });
+    const empty = emptySeat(s.seats);
+    const caller = callerSeat(s.seats);
+    assert.equal((caller - 1 + SEAT_COUNT) % SEAT_COUNT, empty);
+    assert.equal(caller, (empty + 1) % SEAT_COUNT);
+  });
+});
 
 describe('createInitialState', () => {
   it('places empty on middle seat and 2+2 on couch', () => {

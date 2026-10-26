@@ -70,11 +70,15 @@ export function createInitialState(opts = {}) {
   };
 }
 
-/** Left of empty = previous index (counterclockwise if seats increase clockwise). */
+/**
+ * Caller = the person who has the empty seat on their right.
+ * Seats increase clockwise. Facing the center, "right" follows the counterclockwise
+ * tangent, so empty is at caller−1 and the caller sits at empty+1.
+ */
 export function callerSeat(seats) {
   const empty = seats.indexOf(null);
   if (empty < 0) throw new Error('No empty seat');
-  return (empty - 1 + SEAT_COUNT) % SEAT_COUNT;
+  return (empty + 1) % SEAT_COUNT;
 }
 
 export function emptySeat(seats) {
@@ -84,7 +88,7 @@ export function emptySeat(seats) {
 export function callerId(state) {
   const seat = callerSeat(state.seats);
   const id = state.seats[seat];
-  if (id == null) throw new Error('No one sits left of the empty seat');
+  if (id == null) throw new Error('No one sits with the empty seat on their right');
   return id;
 }
 

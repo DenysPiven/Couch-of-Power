@@ -228,9 +228,18 @@ function render() {
   }
 
   document.getElementById('btn-undo').disabled = history.length === 0;
-  document.getElementById('btn-toggle-papers').textContent = showPapers
-    ? 'Hide papers'
-    : 'Show papers';
+  const toggle = document.getElementById('toggle-hidden-names');
+  if (toggle) toggle.checked = showPapers;
+  const toggleLabel = document.getElementById('toggle-hidden-label');
+  const toggleHint = document.getElementById('toggle-hidden-hint');
+  if (toggleLabel) {
+    toggleLabel.textContent = showPapers ? 'Hide secret names' : 'Show hidden names';
+  }
+  if (toggleHint) {
+    toggleHint.textContent = showPapers
+      ? 'All papers visible; turn off to keep only learned names'
+      : 'Reveal every still-secret paper on the board';
+  }
   renderKnownList();
 }
 
@@ -265,8 +274,8 @@ document.getElementById('btn-undo').addEventListener('click', () => {
   if (logEl.firstChild) logEl.removeChild(logEl.firstChild);
   render();
 });
-document.getElementById('btn-toggle-papers').addEventListener('click', () => {
-  showPapers = !showPapers;
+document.getElementById('toggle-hidden-names').addEventListener('change', (e) => {
+  showPapers = e.target.checked;
   render();
 });
 

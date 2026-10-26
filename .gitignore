@@ -3,6 +3,3 @@ dist
 .DS_Store
 *.local
 .vite
-
-# keep videos tracked under artifacts/videos; ignore local record dumps
-/tmp/

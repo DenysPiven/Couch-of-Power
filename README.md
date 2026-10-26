@@ -18,7 +18,7 @@ Browser game and simulations for the party game **Four on the Couch** (Couch of 
 | Page | What it does |
 |------|----------------|
 | [Game](./index.html) | Manual play: circle, couch, papers, moves, win |
-| [Simulations](./sim.html) | Win stats: random / greedy / keep-turn / adversarial |
+| [Simulations](./sim.html) | Win stats across unique seatings (mirrors removed) |
 
 ## Development
 
@@ -35,4 +35,5 @@ Static build output is in `dist/`. Deploy to Pages via `.github/workflows/pages.
 
 - Static Vite site, no backend.
 - UI and docs in English.
-- Core logic: `src/game/engine.js`; strategies: `src/game/strategies.js`.
+- Core logic: `src/game/engine.js`; strategies: `src/game/strategies.js`; seating census: `src/game/configs.js`.
+- Team+empty layouts: **630** raw → **318** unique under mirror → **163** with A↔B swap; **314** playable (non-terminal) under mirror.

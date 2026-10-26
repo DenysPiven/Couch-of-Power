@@ -21,6 +21,8 @@ Browser game and simulations for the party game **Couch of Power** (also known a
 | [Simulations](./sim.html) | Win stats across unique seatings (mirrors removed) |
 | [Stats](./stats.html) | Saved simulation runs from this browser |
 | [Perfect win](./perfect-win.html) | Autoplay animation: forced 8-move win with all names known |
+| [Video](./artifacts/videos/perfect_info_forced_win.mp4) | Recorded explainer (forced win with perfect info) |
+| [Strategy notes](./docs/strategy-analysis.md) | First-team win rates and perfect-info results |
 
 ## Development
 

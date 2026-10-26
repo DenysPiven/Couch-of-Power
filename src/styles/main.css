@@ -605,6 +605,53 @@ button.call-B {
   margin: 0.25rem 0 0;
 }
 
+.panel-title {
+  font-family: var(--font-display);
+  margin: 0 0 0.35rem;
+  font-size: 1.25rem;
+}
+
+.table-wrap {
+  overflow-x: auto;
+  margin-top: 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-solid);
+}
+
+.sit-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.sit-table th,
+.sit-table td {
+  padding: 0.55rem 0.7rem;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+
+.sit-table th {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-muted);
+  background: rgba(26, 36, 32, 0.04);
+  position: sticky;
+  top: 0;
+}
+
+.sit-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.sit-table td:nth-child(n + 2) {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 footer.site-foot {
   padding: 1rem clamp(1rem, 3vw, 2rem) 2rem;
   color: var(--ink-muted);

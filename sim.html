@@ -24,12 +24,63 @@
 
     <main>
       <p class="lead">
-        Separate stats panel: run games with random / greedy / keep-turn /
-        adversarial strategies. Not mixed with manual play.
+        Seat people and the empty chair in every distinct way (mirrors removed),
+        then measure who wins more often in each situation. Papers are reshuffled
+        per game.
       </p>
 
-      <section class="panel">
+      <section class="panel" aria-label="Seating census">
+        <h2 class="panel-title">Seating census</h2>
+        <p class="hint" id="census-summary">Counting…</p>
+        <div class="stats-grid" id="census-grid">
+          <div class="stat">
+            <div class="label">Raw layouts</div>
+            <div class="value" id="census-raw">—</div>
+          </div>
+          <div class="stat">
+            <div class="label">Unique (mirror)</div>
+            <div class="value" id="census-mirror">—</div>
+          </div>
+          <div class="stat">
+            <div class="label">+ team swap</div>
+            <div class="value" id="census-swap">—</div>
+          </div>
+          <div class="stat">
+            <div class="label">Playable (mirror)</div>
+            <div class="value" id="census-playable">—</div>
+          </div>
+          <div class="stat">
+            <div class="label">Already won</div>
+            <div class="value" id="census-terminal">—</div>
+          </div>
+          <div class="stat">
+            <div class="label">Situation buckets</div>
+            <div class="value" id="census-buckets">—</div>
+          </div>
+        </div>
+        <p class="hint">
+          Raw = 9 empty seats × C(8,4) team assignments. Mirror = flip across the
+          vertical axis through seat 1 (top). Team swap also treats A↔B as the same
+          shape. Playable excludes layouts that already have 4 of one team on the couch.
+        </p>
+      </section>
+
+      <section class="panel" style="margin-top: 1.25rem">
         <form class="sim-form" id="sim-form">
+          <label>
+            Start positions
+            <select name="startMode" id="start-mode">
+              <option value="unique" selected>All unique seatings</option>
+              <option value="official">Official start only (2–2, empty mid)</option>
+            </select>
+          </label>
+          <label>
+            Symmetry
+            <select name="symmetry" id="symmetry">
+              <option value="mirror" selected>Drop mirrors</option>
+              <option value="mirror-swap">Drop mirrors + A↔B swap</option>
+            </select>
+          </label>
           <label>
             Team A strategy
             <select name="strategyA" id="strategy-a">
@@ -49,7 +100,11 @@
               <option value="adversarial-B">adversarial (B)</option>
             </select>
           </label>
-          <label>
+          <label id="label-games-per">
+            Games per seating
+            <input type="number" name="gamesPer" id="games-per" min="1" max="200" value="5" />
+          </label>
+          <label id="label-games-total" hidden>
             Number of games
             <input type="number" name="games" id="games" min="1" max="5000" value="200" />
           </label>
@@ -81,9 +136,7 @@
       </section>
 
       <section class="panel" style="margin-top: 1.25rem" aria-live="polite">
-        <h2 style="font-family: var(--font-display); margin: 0 0 0.25rem; font-size: 1.25rem">
-          Results
-        </h2>
+        <h2 class="panel-title">Overall results</h2>
         <p class="hint" id="result-summary">No data yet.</p>
         <div class="stats-grid">
           <div class="stat">
@@ -106,6 +159,10 @@
             <div class="label">Min / max moves</div>
             <div class="value" id="stat-range">—</div>
           </div>
+          <div class="stat">
+            <div class="label">Seatings used</div>
+            <div class="value" id="stat-seatings">—</div>
+          </div>
         </div>
         <div class="bar-chart" id="bar-chart">
           <div class="bar-row">
@@ -127,9 +184,35 @@
       </section>
 
       <section class="panel" style="margin-top: 1.25rem">
-        <h2 style="font-family: var(--font-display); margin: 0 0 0.5rem; font-size: 1.1rem">
-          Known benchmarks
-        </h2>
+        <h2 class="panel-title">By situation</h2>
+        <p class="hint">
+          Grouped by couch split, empty-seat zone, and which team calls first.
+          Sorted by A win rate (then sample size).
+        </p>
+        <div class="table-wrap">
+          <table class="sit-table" id="sit-table">
+            <thead>
+              <tr>
+                <th>Situation</th>
+                <th>Layouts</th>
+                <th>Games</th>
+                <th>A%</th>
+                <th>B%</th>
+                <th>Draw%</th>
+                <th>Avg moves</th>
+              </tr>
+            </thead>
+            <tbody id="sit-body">
+              <tr>
+                <td colspan="7" class="hint">Run a unique-seatings batch to fill this table.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel" style="margin-top: 1.25rem">
+        <h2 class="panel-title">Known benchmarks</h2>
         <ul class="hint" style="margin: 0; padding-left: 1.1rem">
           <li>1 move → win is impossible from a 2+2 start.</li>
           <li>Coop with known papers: typical 4-move path (third move “gives away”).</li>

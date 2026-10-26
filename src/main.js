@@ -58,7 +58,7 @@ function newGame() {
 function seatPosition(index) {
   // Seat 0 at top; clockwise. Couch = 0..3 near the top.
   const angle = (-90 + index * (360 / SEAT_COUNT)) * (Math.PI / 180);
-  const radius = 38;
+  const radius = 36;
   const x = 50 + radius * Math.cos(angle);
   const y = 50 + radius * Math.sin(angle);
   return { x, y };
@@ -71,8 +71,8 @@ function ensureSeats() {
     const el = document.createElement('div');
     el.className = 'seat';
     el.dataset.seat = String(i);
-    el.style.setProperty('--x', `${x}%`);
-    el.style.setProperty('--y', `${y}%`);
+    el.style.left = `${x}%`;
+    el.style.top = `${y}%`;
     boardEl.appendChild(el);
   }
 }

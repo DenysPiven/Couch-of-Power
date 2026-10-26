@@ -196,10 +196,14 @@ function render() {
     el.classList.add(`team-${player.team}`);
     const paperText = nameOnPaper(state, pid);
     const known = paperIsKnown(pid);
+    // Person identity never changes — only the held paper does after a swap.
     el.innerHTML = `
-      <span class="seat-label">${couch.includes(i) ? 'couch' : `seat ${i + 1}`} · ${player.team}</span>
-      <span class="seat-name">${player.name}</span>
-      <div class="seat-paper ${known ? 'is-known' : 'is-hidden'}" title="${known ? 'Known paper' : 'Hidden paper'}">${paperText}</div>
+      <span class="seat-label">${couch.includes(i) ? 'couch' : `seat ${i + 1}`} · team ${player.team}</span>
+      <span class="seat-name" title="Person (fixed)">${player.name}</span>
+      <div class="seat-paper ${known ? 'is-known' : 'is-hidden'}" title="${known ? 'Paper they hold (swaps on calls)' : 'Hidden paper'}">
+        <span class="seat-paper-label">paper</span>
+        <span class="seat-paper-value">${paperText}</span>
+      </div>
     `;
   }
 

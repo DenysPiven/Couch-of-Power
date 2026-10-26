@@ -13,7 +13,7 @@ import {
 /** @type {Strategy} */
 export function randomStrategy(state) {
   const legal = legalCalls(state);
-  if (!legal.length) throw new Error('Немає легальних ходів');
+  if (!legal.length) throw new Error('No legal moves');
   return legal[Math.floor(Math.random() * legal.length)];
 }
 
@@ -26,7 +26,7 @@ export function randomStrategy(state) {
 export function greedyStrategy(forTeam) {
   return (state) => {
     const legal = legalCalls(state);
-    if (!legal.length) throw new Error('Немає легальних ходів');
+    if (!legal.length) throw new Error('No legal moves');
     const team = forTeam ?? teamOfCaller(state);
     let best = legal[0];
     let bestScore = -Infinity;
@@ -58,7 +58,7 @@ export function keepTurnStrategy() {
   const greedy = greedyStrategy();
   return (state) => {
     const legal = legalCalls(state);
-    if (!legal.length) throw new Error('Немає легальних ходів');
+    if (!legal.length) throw new Error('No legal moves');
     const team = teamOfCaller(state);
 
     const keepers = [];
@@ -94,7 +94,7 @@ export function keepTurnStrategy() {
 export function adversarialStrategy(team) {
   return (state) => {
     const legal = legalCalls(state);
-    if (!legal.length) throw new Error('Немає легальних ходів');
+    if (!legal.length) throw new Error('No legal moves');
     const active = teamOfCaller(state);
     const opp = team === 'A' ? 'B' : 'A';
 

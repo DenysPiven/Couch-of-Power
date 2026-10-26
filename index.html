@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="uk">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Четверо на дивані</title>
+    <title>Four on the Couch</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -14,22 +14,22 @@
   </head>
   <body>
     <header class="app-header">
-      <h1 class="brand">Четверо на <span>дивані</span></h1>
-      <nav class="nav" aria-label="Навігація">
-        <a href="./index.html" aria-current="page">Гра</a>
-        <a href="./sim.html">Симуляції</a>
+      <h1 class="brand">Four on the <span>Couch</span></h1>
+      <nav class="nav" aria-label="Navigation">
+        <a href="./index.html" aria-current="page">Game</a>
+        <a href="./sim.html">Simulations</a>
       </nav>
     </header>
 
     <main>
       <p class="lead">
-        8 гравців, 9 стільців по колу. Хто зліва від порожнього — кличе ім’я.
-        Хто тримає цей папірець — сідає на порожнє і міняється папірцями з
-        викликачем. Мета команди: усі четверо на дивані.
+        8 players, 9 seats in a circle. Whoever sits left of the empty seat calls a
+        name. Whoever holds that paper sits in the empty seat and swaps papers with
+        the caller. Team goal: all four on the couch.
       </p>
 
       <div class="layout-game">
-        <section class="panel board-wrap" aria-label="Ігрове поле">
+        <section class="panel board-wrap" aria-label="Board">
           <div class="board" id="board">
             <div class="couch-arc" aria-hidden="true"></div>
           </div>
@@ -38,65 +38,65 @@
         <aside class="side">
           <div class="scores" aria-live="polite">
             <div class="score-card A">
-              <h2>Команда A</h2>
+              <h2>Team A</h2>
               <div class="count" id="score-a">2</div>
-              <div>на дивані</div>
+              <div>on the couch</div>
             </div>
             <div class="score-card B">
-              <h2>Команда B</h2>
+              <h2>Team B</h2>
               <div class="count" id="score-b">2</div>
-              <div>на дивані</div>
+              <div>on the couch</div>
             </div>
           </div>
 
           <div class="panel">
             <div class="meta">
-              <span>Хід: <strong id="move-count">0</strong></span>
-              <span>Кличе: <strong id="caller-name">—</strong></span>
-              <span>Команда: <strong id="caller-team">—</strong></span>
+              <span>Move: <strong id="move-count">0</strong></span>
+              <span>Caller: <strong id="caller-name">—</strong></span>
+              <span>Team: <strong id="caller-team">—</strong></span>
             </div>
             <div id="win-banner" class="win-banner" role="status"></div>
           </div>
 
           <div class="panel controls">
-            <h2>Кличіть ім’я</h2>
-            <p class="hint" id="call-hint">Оберіть ім’я з папірця когось іншого.</p>
+            <h2>Call a name</h2>
+            <p class="hint" id="call-hint">Pick a name from someone else’s paper.</p>
             <div class="call-grid" id="call-grid"></div>
             <div class="toolbar">
-              <button type="button" id="btn-toggle-papers">Показати папірці</button>
-              <button type="button" id="btn-undo" disabled>Скасувати</button>
-              <button type="button" class="primary" id="btn-new">Нова гра</button>
+              <button type="button" id="btn-toggle-papers">Show papers</button>
+              <button type="button" id="btn-undo" disabled>Undo</button>
+              <button type="button" class="primary" id="btn-new">New game</button>
             </div>
             <div class="checks">
               <label>
                 <input type="checkbox" id="rule-own" checked />
-                Не кликати своє ім’я з папірця
+                Do not call the name on your own paper
               </label>
               <label>
                 <input type="checkbox" id="rule-repeat" checked />
-                Не кликати те саме двічі підряд
+                Do not call the same name twice in a row
               </label>
             </div>
           </div>
 
           <div class="panel">
             <h2 style="font-family: var(--font-display); font-size: 1.05rem; margin: 0 0 0.5rem">
-              Журнал
+              Log
             </h2>
             <ol class="log" id="log"></ol>
           </div>
 
           <details class="panel">
-            <summary style="font-weight: 700; cursor: pointer">Імена гравців</summary>
+            <summary style="font-weight: 700; cursor: pointer">Player names</summary>
             <div class="setup-row" id="names-form" style="margin-top: 0.75rem"></div>
-            <p class="hint">Зміни застосуються після «Нова гра».</p>
+            <p class="hint">Changes apply after “New game”.</p>
           </details>
         </aside>
       </div>
     </main>
 
     <footer class="site-foot">
-      Диван — стільці 1–4 зверху кола. Порожнє на старті — середній стілець.
+      The couch is seats 1–4 at the top of the circle. Empty seat at start is the middle chair.
     </footer>
 
     <script type="module" src="/src/main.js"></script>

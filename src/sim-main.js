@@ -32,7 +32,7 @@ form.addEventListener('submit', async (e) => {
   let minMoves = Infinity;
   let maxMovesSeen = 0;
 
-  statusEl.textContent = `Прогін ${games} партій…`;
+  statusEl.textContent = `Running ${games} games…`;
 
   const batch = 25;
   for (let i = 0; i < games; i++) {
@@ -62,7 +62,7 @@ form.addEventListener('submit', async (e) => {
     if (i % batch === 0 || i === games - 1) {
       const pct = ((i + 1) / games) * 100;
       progressEl.style.width = `${pct}%`;
-      statusEl.textContent = `Зроблено ${i + 1} / ${games}`;
+      statusEl.textContent = `Done ${i + 1} / ${games}`;
       renderStats({
         games: i + 1,
         winsA,
@@ -79,8 +79,8 @@ form.addEventListener('submit', async (e) => {
   }
 
   statusEl.textContent = abort
-    ? `Зупинено після ${winsA + winsB + draws} партій.`
-    : `Готово: ${games} партій (сід ${baseSeed}).`;
+    ? `Stopped after ${winsA + winsB + draws} games.`
+    : `Done: ${games} games (seed ${baseSeed}).`;
   btnRun.disabled = false;
   btnStop.disabled = true;
 });
@@ -112,7 +112,7 @@ function renderStats(s) {
   document.getElementById('pct-draw').textContent = `${pctD.toFixed(1)}%`;
 
   document.getElementById('result-summary').textContent =
-    `A ${s.winsA} · B ${s.winsB} · ліміт/нічия ${s.draws} (з ${s.games}, сід ${s.baseSeed})`;
+    `A ${s.winsA} · B ${s.winsB} · limit/draw ${s.draws} (of ${s.games}, seed ${s.baseSeed})`;
 }
 
 function clamp(n, min, max) {

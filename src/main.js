@@ -17,11 +17,16 @@ const callGrid = document.getElementById('call-grid');
 const logEl = document.getElementById('log');
 const winBanner = document.getElementById('win-banner');
 const namesForm = document.getElementById('names-form');
+const knownListEl = document.getElementById('known-list');
 
 let state = null;
-/** @type {import('./game/engine.js').GameState[]} */
+/** @type {{ state: import('./game/engine.js').GameState, knownPapers: Map<number, number>, calledNames: Set<number> }[]} */
 let history = [];
 let showPapers = false;
+/** playerId -> nameOwnerId we currently know they hold */
+let knownPapers = new Map();
+/** nameOwnerIds that have been called at least once this game */
+let calledNames = new Set();
 
 function readNames() {
   const inputs = namesForm.querySelectorAll('input[data-name-idx]');
@@ -51,6 +56,8 @@ function newGame() {
     noRepeat: document.getElementById('rule-repeat').checked,
   });
   history = [];
+  knownPapers = new Map();
+  calledNames = new Set();
   logEl.innerHTML = '';
   render();
 }
@@ -77,6 +84,62 @@ function ensureSeats() {
   }
 }
 
+function paperIsKnown(playerId) {
+  if (showPapers) return true;
+  const known = knownPapers.get(playerId);
+  return known != null && known === state.papers[playerId];
+}
+
+/**
+ * After calling `nameOwnerId`, everyone sees who held that paper; the caller
+ * receives it. The mover gets the caller's old paper only if that was known.
+ * @param {import('./game/engine.js').GameState} before
+ * @param {number} nameOwnerId
+ * @param {Map<number, number>} prevKnown
+ */
+function knowledgeAfterCall(before, nameOwnerId, prevKnown) {
+  const caller = callerId(before);
+  let mover = -1;
+  for (let s = 0; s < SEAT_COUNT; s++) {
+    const pid = before.seats[s];
+    if (pid != null && before.papers[pid] === nameOwnerId) {
+      mover = pid;
+      break;
+    }
+  }
+
+  const next = new Map(prevKnown);
+  const callerOldPaper = before.papers[caller];
+
+  // Public: caller now holds the called name.
+  next.set(caller, nameOwnerId);
+
+  // Mover receives caller's previous paper — known only if we already knew it.
+  if (prevKnown.has(caller) && prevKnown.get(caller) === callerOldPaper) {
+    next.set(mover, callerOldPaper);
+  } else {
+    next.delete(mover);
+  }
+
+  return next;
+}
+
+function renderKnownList() {
+  if (!knownListEl) return;
+  const entries = [];
+  for (const [playerId, nameOwnerId] of knownPapers) {
+    if (state.papers[playerId] !== nameOwnerId) continue;
+    const holder = state.players[playerId];
+    const paper = state.players[nameOwnerId];
+    entries.push(`${holder.name} holds “${paper.name}”`);
+  }
+  if (!entries.length) {
+    knownListEl.textContent = 'None yet — call a name to reveal a paper.';
+    return;
+  }
+  knownListEl.textContent = entries.join(' · ');
+}
+
 function render() {
   ensureSeats();
   const counts = couchCounts(state);
@@ -84,7 +147,6 @@ function render() {
   document.getElementById('score-b').textContent = String(counts.B);
   document.getElementById('move-count').textContent = String(state.moveCount);
 
-  const empty = emptySeat(state.seats);
   const cSeat = callerSeat(state.seats);
   const cId = state.winner ? null : callerId(state);
 
@@ -113,10 +175,11 @@ function render() {
     const player = state.players[pid];
     el.classList.add(`team-${player.team}`);
     const paperText = nameOnPaper(state, pid);
+    const known = paperIsKnown(pid);
     el.innerHTML = `
       <span class="seat-label">${COUCH.includes(i) ? 'couch' : `seat ${i + 1}`} · ${player.team}</span>
       <span class="seat-name">${player.name}</span>
-      <div class="seat-paper ${showPapers ? '' : 'is-hidden'}" title="Paper">${paperText}</div>
+      <div class="seat-paper ${known ? 'is-known' : 'is-hidden'}" title="${known ? 'Known paper' : 'Hidden paper'}">${paperText}</div>
     `;
   }
 
@@ -131,7 +194,9 @@ function render() {
     btn.type = 'button';
     btn.textContent = p.name;
     btn.className = `call-${p.team}`;
+    if (calledNames.has(p.id)) btn.classList.add('is-revealed');
     btn.disabled = !legal.includes(p.id);
+    btn.title = calledNames.has(p.id) ? 'Called before this game' : '';
     btn.addEventListener('click', () => doCall(p.id));
     callGrid.appendChild(btn);
   }
@@ -148,14 +213,23 @@ function render() {
   document.getElementById('btn-toggle-papers').textContent = showPapers
     ? 'Hide papers'
     : 'Show papers';
+
+  renderKnownList();
 }
 
 function doCall(nameOwnerId) {
   if (state.winner) return;
-  history.push(state);
+  history.push({
+    state,
+    knownPapers: new Map(knownPapers),
+    calledNames: new Set(calledNames),
+  });
   const caller = state.players[callerId(state)];
   const called = state.players[nameOwnerId];
-  state = applyCall(state, nameOwnerId);
+  const before = state;
+  knownPapers = knowledgeAfterCall(before, nameOwnerId, knownPapers);
+  calledNames.add(nameOwnerId);
+  state = applyCall(before, nameOwnerId);
   const li = document.createElement('li');
   li.textContent = `${state.moveCount}. ${caller.name} → “${called.name}”${
     state.winner ? ` · win ${state.winner}` : ''
@@ -167,7 +241,10 @@ function doCall(nameOwnerId) {
 document.getElementById('btn-new').addEventListener('click', newGame);
 document.getElementById('btn-undo').addEventListener('click', () => {
   if (!history.length) return;
-  state = history.pop();
+  const prev = history.pop();
+  state = prev.state;
+  knownPapers = prev.knownPapers;
+  calledNames = prev.calledNames;
   if (logEl.firstChild) logEl.removeChild(logEl.firstChild);
   render();
 });

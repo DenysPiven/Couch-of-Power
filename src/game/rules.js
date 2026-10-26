@@ -31,13 +31,25 @@ const NAME_POOL = [
   'Parker',
 ];
 
+/**
+ * Empty seat opposite the middle of the couch (seats 0..couchSize-1 at the top).
+ * For the classic 9-seat table with a 4-seat couch this is seat 6 (1-based: 7).
+ * @param {number} seatCount
+ * @param {number} couchSize
+ */
+export function oppositeCouchEmpty(seatCount, couchSize) {
+  const couchMid = (couchSize - 1) / 2;
+  const idx = Math.round(couchMid + seatCount / 2) % seatCount;
+  return idx;
+}
+
 /** @type {GameRules} */
 export const DEFAULT_RULES = freezeRules({
   players: 8,
   teamA: 4,
   teamB: 4,
   couchSize: 4,
-  emptyStart: 4,
+  emptyStart: oppositeCouchEmpty(9, 4),
 });
 
 /**
@@ -62,7 +74,7 @@ export function normalizeRules(input = {}) {
 
   let emptyStart =
     input.emptyStart == null
-      ? Math.min(couchSize, seatCount - 1)
+      ? oppositeCouchEmpty(seatCount, couchSize)
       : clampInt(input.emptyStart, 0, seatCount - 1);
 
   return freezeRules({ players, teamA, teamB, couchSize, emptyStart, seatCount });

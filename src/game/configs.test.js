@@ -53,13 +53,13 @@ describe('seating enumeration', () => {
 });
 
 describe('createStateFromLayout', () => {
-  it('builds official-like 2-2 mid empty', () => {
+  it('builds official-like 2-2 with empty opposite the couch', () => {
     const layout = officialStartLayout(DEFAULT_RULES);
     const meta = describeLayout(layout, DEFAULT_RULES);
-    assert.equal(meta.empty, 4);
+    assert.equal(meta.empty, 6);
     assert.deepEqual(meta.couch, { A: 2, B: 2 });
     const state = createStateFromLayout(layout, { seed: 7, rules: DEFAULT_RULES });
-    assert.equal(emptySeat(state.seats), 4);
+    assert.equal(emptySeat(state.seats), 6);
     assert.deepEqual(couchCounts(state), { A: 2, B: 2 });
     assert.equal(state.winner, null);
   });

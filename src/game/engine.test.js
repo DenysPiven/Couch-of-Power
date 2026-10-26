@@ -25,8 +25,9 @@ describe('callerSeat', () => {
 });
 
 describe('createInitialState', () => {
-  it('places empty on middle seat and 2+2 on couch', () => {
+  it('places empty opposite the couch and 2+2 on couch', () => {
     const s = createInitialState({ seed: 1 });
+    assert.equal(EMPTY_START, 6);
     assert.equal(s.seats[EMPTY_START], null);
     assert.equal(s.seats.filter((x) => x != null).length, 8);
     const c = couchCounts(s);

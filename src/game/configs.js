@@ -125,14 +125,15 @@ export function describeLayout(layout, rules) {
   const emptyOnCouch = couch.includes(empty);
   const callerSeatIdx = (empty + 1) % rules.seatCount;
   const callerTeam = /** @type {'A'|'B'} */ (layout[callerSeatIdx]);
-  const mid = Math.min(rules.couchSize, rules.seatCount - 1);
+  const opposite = Math.round((rules.couchSize - 1) / 2 + rules.seatCount / 2) % rules.seatCount;
   const emptyZone = emptyOnCouch
     ? 'couch'
-    : empty === mid
-      ? 'mid'
-      : empty === mid + 1 || empty === rules.seatCount - 1
-        ? 'near'
-        : 'far';
+    : empty === opposite
+      ? 'opposite'
+      : empty === (opposite + 1) % rules.seatCount ||
+          empty === (opposite - 1 + rules.seatCount) % rules.seatCount
+        ? 'near-opposite'
+        : 'side';
   const situation = `couch ${a}-${b} · empty ${emptyZone}@${empty} · caller ${callerTeam}`;
   return {
     empty,

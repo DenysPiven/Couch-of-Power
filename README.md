@@ -1,8 +1,8 @@
-# Four on the Couch
+# Couch of Power
 
-Browser game and simulations for the party game **Four on the Couch** (Couch of power).
+Browser game and simulations for the party game **Couch of Power** (also known as Four on the Couch).
 
-**Site (GitHub Pages):** https://denyspiven.github.io/Four-on-the-Couch/
+**Site (GitHub Pages):** https://denyspiven.github.io/Couch-of-Power/
 
 ## Rules (short)
 
@@ -25,7 +25,7 @@ Browser game and simulations for the party game **Four on the Couch** (Couch of 
 
 ```bash
 npm install
-npm run dev      # http://localhost:5173/Four-on-the-Couch/
+npm run dev      # http://localhost:5173/Couch-of-Power/
 npm test
 npm run build
 ```

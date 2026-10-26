@@ -1,8 +1,9 @@
-const THEME_KEY = 'fotc-theme-v1';
+const THEME_KEY = 'cop-theme-v1';
+const LEGACY_THEME_KEY = 'fotc-theme-v1';
 
 /** @returns {'light' | 'dark'} */
 export function getTheme() {
-  const saved = localStorage.getItem(THEME_KEY);
+  const saved = localStorage.getItem(THEME_KEY) || localStorage.getItem(LEGACY_THEME_KEY);
   if (saved === 'dark' || saved === 'light') return saved;
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
@@ -11,6 +12,9 @@ export function getTheme() {
 export function applyTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
   localStorage.setItem(THEME_KEY, theme);
+  try {
+    localStorage.removeItem(LEGACY_THEME_KEY);
+  } catch (_) {}
   const btn = document.getElementById('theme-toggle');
   if (btn) {
     const dark = theme === 'dark';

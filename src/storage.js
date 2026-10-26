@@ -1,7 +1,9 @@
 import { DEFAULT_RULES, normalizeRules, rulesLabel } from './game/rules.js';
 
-const RULES_KEY = 'fotc-rules-v1';
-const RUNS_KEY = 'fotc-sim-runs-v1';
+const RULES_KEY = 'cop-rules-v1';
+const RUNS_KEY = 'cop-sim-runs-v1';
+const LEGACY_RULES_KEY = 'fotc-rules-v1';
+const LEGACY_RUNS_KEY = 'fotc-sim-runs-v1';
 const MAX_RUNS = 100;
 
 /**
@@ -28,9 +30,13 @@ const MAX_RUNS = 100;
  * @property {{ situation: string, layouts: number, games: number, winsA: number, winsB: number, draws: number, avgMoves: number|null }[]} situations
  */
 
+function readRaw(primary, legacy) {
+  return localStorage.getItem(primary) ?? localStorage.getItem(legacy);
+}
+
 export function loadRules() {
   try {
-    const raw = localStorage.getItem(RULES_KEY);
+    const raw = readRaw(RULES_KEY, LEGACY_RULES_KEY);
     if (!raw) return DEFAULT_RULES;
     return normalizeRules(JSON.parse(raw));
   } catch {
@@ -42,13 +48,16 @@ export function loadRules() {
 export function saveRules(rules) {
   const normalized = normalizeRules(rules);
   localStorage.setItem(RULES_KEY, JSON.stringify(normalized));
+  try {
+    localStorage.removeItem(LEGACY_RULES_KEY);
+  } catch (_) {}
   return normalized;
 }
 
 /** @returns {SimRunRecord[]} */
 export function loadSimRuns() {
   try {
-    const raw = localStorage.getItem(RUNS_KEY);
+    const raw = readRaw(RUNS_KEY, LEGACY_RUNS_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     return Array.isArray(parsed) ? parsed : [];
@@ -69,6 +78,9 @@ export function saveSimRun(partial) {
   };
   runs.unshift(record);
   localStorage.setItem(RUNS_KEY, JSON.stringify(runs.slice(0, MAX_RUNS)));
+  try {
+    localStorage.removeItem(LEGACY_RUNS_KEY);
+  } catch (_) {}
   return record;
 }
 
@@ -76,9 +88,15 @@ export function saveSimRun(partial) {
 export function deleteSimRun(id) {
   const runs = loadSimRuns().filter((r) => r.id !== id);
   localStorage.setItem(RUNS_KEY, JSON.stringify(runs));
+  try {
+    localStorage.removeItem(LEGACY_RUNS_KEY);
+  } catch (_) {}
   return runs;
 }
 
 export function clearSimRuns() {
   localStorage.removeItem(RUNS_KEY);
+  try {
+    localStorage.removeItem(LEGACY_RUNS_KEY);
+  } catch (_) {}
 }
